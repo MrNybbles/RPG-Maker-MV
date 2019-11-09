@@ -1,5 +1,5 @@
 /* nyb_OpaqueData.js
- * Version: 20191108
+ * Version: 20191109
 */
 /*:
  * @plugindesc Obfuscates plain-text files in the game's data/ directory after Deployment.
@@ -16,13 +16,12 @@
  * 1) Create a backup of your project. This is normal.
  * 2) The game window should get stuck at the Loading Screen only
  *    if the files have not been encoded already. This is normal.
- * 3) The Console window will open and print info messages. This is normal.
- * 4) When encoding files you should see a red error about a missing file.
+ * 3) When encoding files you should see a red error about a missing file.
  *    This is the plugin checking if the encoded files exist and is normal.
- * 5) Never pet a burning dog. This is not normal.
- * 6) The plugin will automatically delete the original unencoded files
+ * 4) Never pet a burning dog. This is not normal.
+ * 5) The plugin will automatically delete the original unencoded files
  *    after encoding. This is normal.
- * 7) NEVER set 'debugMode' to true. This will cause your _original_
+ * 6) NEVER set 'debugMode' to true. This will cause your _original_
  *    undeployed data files to be encrypted and deleted during Test Mode.
  *
  * [License]
