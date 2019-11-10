@@ -1,28 +1,18 @@
 /* nyb_OpaqueData.js
- * Version: 20191109
+ * Version: 20191109b
 */
 /*:
- * @plugindesc Obfuscates plain-text files in the game's data/ directory after Deployment.
+ * @plugindesc Obfuscates plain-text files in the game's data/ directory.
+ * Just run once after Deployment.
+ *
  * @author Mr.Nybbles
  *
  * @help [Instructions]
- * 1) Enable this plugin.
+ * 1) Add this plugin to your Project and Enable it.
  * 2) In RPG Maker MV select 'File->Deployment'.
  * 3) Export and Encrypt as normal.
- * 4) Run the Exported Game one time (this will encode the data files).
- * 5) Run the Exported Game a second time. It should run normally.
- *
- * [Notes]
- * 1) Create a backup of your project. This is normal.
- * 2) The game window should get stuck at the Loading Screen only
- *    if the files have not been encoded already. This is normal.
- * 3) When encoding files you should see a red error about a missing file.
- *    This is the plugin checking if the encoded files exist and is normal.
- * 4) Never pet a burning dog. This is not normal.
- * 5) The plugin will automatically delete the original unencoded files
- *    after encoding. This is normal.
- * 6) NEVER set 'debugMode' to true. This will cause your _original_
- *    undeployed data files to be encrypted and deleted during Test Mode.
+ * 4) Run the Exported Game. This will encode all deployed data files
+ *    and delete the deployed unencrypted files.
  *
  * [License]
  * MIT https://opensource.org/licenses/MIT
@@ -51,62 +41,38 @@
 'use strict';
 
 (function() {
-	const path     = require('path');
-	const gamePath = path.join(path.dirname(process.mainModule.filename), 'data');
-	const suffix   = 'x'; // Encoded file names have this appended to them.
-	const debugMode = false; // WARNING: NEVER EVER ENABLE THIS !!!!
+	const fs        = require('fs');
+	const path      = require('path');
+	const dataDir   = path.join(path.dirname(process.mainModule.filename), 'data');
+	const suffix    = 'x';  // Encoded file names have this appended to them.
 	
 	
-	const fileExists = function(uri) {
-		return require('fs').existsSync(path.join(gamePath, uri));
-	};
-	
-	
-	const fileSave = function(uri, data) {
-		require('fs').writeFileSync(path.join(gamePath, uri), data);
-	};
-	
-	
-	const fileLoad = function(uri) {
-		return JSON.parse(require('fs').readFileSync(path.join(gamePath, uri)));
-	};
-	
-	
-	const fileDelete = function(uri) {
-		require('fs').unlinkSync(path.join(gamePath, uri));
-	};
-	
-	
-	const encodeFile = function(uri) {
-		const xhr = new XMLHttpRequest();
-		console.info('Encoding ' + uri);
+	const encodeFile = function(fileSpec) {
+		console.info('Encoding ' + fileSpec);
 		
-		xhr.open('GET', 'data/' + uri);
-		xhr.overrideMimeType('application/json');
-		xhr.onload = function() {
-			if (xhr.status < 400) {
-				fileSave(uri + suffix, LZString.compressToBase64(xhr.responseText));
-				fileDelete(uri); // Delete original file after encoding a new one!
-			}
-		};
+		const src = path.join(dataDir, fileSpec)
+		const dst = src + suffix;
 		
-		xhr.onerror = this._mapLoader || function() {
-			DataManager._errorUrl = DataManager._errorUrl || uri;
-		};
+		fs.writeFileSync(src + suffix,
+			LZString.compressToBase64(fs.readFileSync(src, 'utf8'))
+		);
 		
-		xhr.send();
+		if(src != dst) {
+			fs.unlinkSync(src);
+		}
 	};
 	
 	
 	const decodeFile = function(name, uri) {
 		const xhr = new XMLHttpRequest();
-//		console.info('Decoding ' + uri);
 
 		xhr.open('GET', 'data/' + uri + suffix);
 		xhr.overrideMimeType('application/json');
 		xhr.onload = function() {
 			if (xhr.status < 400) {
-				window[name] = JSON.parse(LZString.decompressFromBase64(xhr.responseText));
+				window[name] = JSON.parse(
+					LZString.decompressFromBase64(xhr.responseText)
+				);
 				DataManager.onLoad(window[name]);
 			}
 			
@@ -120,38 +86,26 @@
 	};
 	
 	
-	if(!Utils.isOptionValid('test') || debugMode) {
+	if(!Utils.isOptionValid('test')) {
 		const DataManager_loadDatabase = DataManager.loadDatabase;
-		
-		if(Utils.isOptionValid('test') && debugMode) {
-			console.warn('Debug Mode! You made a backup recently, right?');
-		}
 		
 		DataManager.loadDataFile = decodeFile;
 		
 		DataManager.loadDatabase = function() {
-			
-			if(!fileExists(this._databaseFiles[0].src + suffix)) {
+			if(!fs.existsSync(path.join(dataDir, this._databaseFiles[0].src + suffix))) {
+				console.info('[Begin Encoding]');
 				
-				console.info('[Encoding Databases]');
-				for(let i = 0; i < this._databaseFiles.length; ++i) {
-					encodeFile.call(this, this._databaseFiles[i].src);
-				}
+				fs.readdirSync(dataDir)
+				.filter(entry => entry.endsWith('.json'))
+				.forEach(function(entry) {
+					encodeFile.call(this, entry);
+				});
 				
-				console.info('[Encoding Maps]');
-				const mapInfo = fileLoad('MapInfos.json');
-				
-				for(let i = 0; i < mapInfo.length; ++i) {
-					if(null != mapInfo[i]) {
-						const fileSpec = 'Map%1.json'.format(mapInfo[i].id.padZero(3));
-						encodeFile.call(this, fileSpec);
-					}
-				}
-				
-				console.info('Encoding Finished!');
-			} else {
-				DataManager_loadDatabase.call(this);
+				console.info('[End Encoding]');
 			}
+			
+			DataManager.loadDatabase = DataManager_loadDatabase;
+			DataManager_loadDatabase.call(this);
 		};
 	}
 	
