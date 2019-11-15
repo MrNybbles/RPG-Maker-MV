@@ -1,5 +1,5 @@
 /* nyb_MouseCommand.js
- * Version: 20191112
+ * Version: 20191115
 */
 /*:
  * @plugindesc Hide Mouse Pointer when Idle and set the mouse cursor with plugin commands.
@@ -9,8 +9,19 @@
  * Automatically hide the mouse pointer after going idle
  * (i.e. not being moved for a while). Provides plugin commands to
  * enable/disable going idle and setting the timeout.
- * Also provides plugin commands to set the cursor type and to lock/unlock
+ *
+ * Provides plugin commands to set the cursor type and to lock/unlock
  * the mouse to this program.
+ *
+ * Mouse Idle Wiggle allows the mouse to be moved ±X pixels without counting
+ * as being moved. Some optical mice will detect slight movement on glossy
+ * surfaces and often times a mouse will move (be bumped) slightly when the
+ * user lets go of the mouse. This setting is in Screen Pixels, not game pixels
+ * (when the screen is stretched).
+ *
+ * [Note]
+ * Setting the Mouse Idle Timeout value too low will cause the mouse
+ * cursor to flicker while being moved. This is why the minimum is set to 100.
  *
  * [Mouse Plugin Commands]
  * mouse cursor URL
@@ -29,7 +40,10 @@
  *    Enable or disable hiding the mouse after it is idle.
  *
  * mouse timeout MS
- *    How much time must elapse before the mouse becomes idle, in milliseconds.
+ *    How much time must elapse before the mouse becomes idle (in milliseconds).
+ *
+ * mouse wiggle PX
+ *    How far the mouse may move before being shown again (in screen pixels).
  *
  * mouse show
  *    Shows the mouse and restores the mouse cursor.
@@ -61,8 +75,16 @@
  * @desc    Time (in milliseconds) before the mouse pointer is hidden.
  * Default: 2000 (2 seconds)
  * @default 2000
- * @min     0
+ * @min     100
  * @max     2147483647
+ *
+ * @param   Mouse Idle Wiggle
+ * @type    number
+ * @desc    How much movement counts as intentional movement.
+ * Default: 2 (±2 Pixels)
+ * @default 2
+ * @min     1
+ * @max     100
  *
  * @param   Mouse Command Name
  * @type    string
@@ -77,7 +99,7 @@
 	const fs      = require('fs');
 	const path    = require('path');
 	
-	const param = {
+	const module = {
 		plugin_name:'nyb_MouseCommand',
 		uint_clamp:function(value) {
 			return value <= 2147483647 ? value >= 0 ?
@@ -93,18 +115,18 @@
 		},
 		uint:function(name, def) {
 			let value = parseInt(PluginManager.parameters(this.plugin_name)[name]);
-			return !isNaN(value) ? value.clamp(0, 2147483647) : def;
+			return !isNaN(value) ? Math.max(0, value) : def;
 		}
 	};
 	
-	const cmdName = param.string('Mouse Command Name', '');
+	const cmdName = module.string('Mouse Command Name', '');
 	
 	const mouse = {
 		cursor:null,
 		timeout:2000,
 		x:0,
 		y:0,
-		rng:2,
+		wiggle:2,
 		tid:0,
 		isHooked:false,
 		hide:function() {
@@ -143,10 +165,10 @@
 				this.y = evt.clientY;
 				this.start_timer();
 			} else {
-				if(	this.x < evt.clientX-this.rng ||
-					this.x > evt.clientX+this.rng ||
-					this.y < evt.clientY-this.rng ||
-					this.y > evt.clientY+this.rng ){
+				if(	this.x < evt.clientX-this.wiggle ||
+					this.x > evt.clientX+this.wiggle ||
+					this.y < evt.clientY-this.wiggle ||
+					this.y > evt.clientY+this.wiggle ){
 					this.show();
 					this.start_timer();
 				}
@@ -209,9 +231,14 @@
 						} break;
 						default: {
 							if(!isNaN(args[1])) {
-								mouse.timeout = param.uint_clamp(args[1]);
+								mouse.timeout = module.uint_clamp(args[1]);
 							}
 						} break;
+					}
+				} break;
+				case 'wiggle': {
+					if(!isNaN(args[1])) {
+						mouse.wiggle = module.uint_clamp(args[1]);
 					}
 				} break;
 				case 'lock': {
@@ -224,12 +251,13 @@
 		}
 	}
 	
-	mouse.timeout = param.uint('Mouse Idle Timeout', 2000);
+	mouse.timeout = module.uint('Mouse Idle Timeout', 2000);
+	mouse.wiggle  = module.uint('Mouse Idle Wiggle',  2);
 	
-	if(param.bool('Auto-hide Mouse', false)) {
+	if(module.bool('Auto-hide Mouse', false)) {
 		window.addEventListener("load", function(evt) {
 			mouse.enable_timeout();
-			if(param.bool('Initially Hide Mouse', false)) {
+			if(module.bool('Initially Hide Mouse', false)) {
 				mouse.hide();
 			}
 		}, {once:true}, false);
