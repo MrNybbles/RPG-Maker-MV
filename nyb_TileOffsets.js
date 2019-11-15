@@ -1,9 +1,9 @@
 /* nyb_TileOffsets.js
- * Version: 20191111
+ * Version: 20191115
 */
 /*:
  * @plugindesc Enables Tile Offsets via Terrain Tags!
- * @author Mr. Nybbles
+ * @author MrNybbles
  *
  * @help [Description]
  * Useful for moving counters, furniture and wall decoration tiles
@@ -53,266 +53,275 @@
  *    However, Terrain Tag 0 is listed last to discourage its use!
  *
  *
- * @param Tag 1 Enable
- * @desc Enable Offsets for Terrain Tag 1 tiles.
- * @type boolean
- * @default false
+ * @param    Tag 1 Enable
+ * @type     boolean
+ * @desc     Enable Offsets for Terrain Tag 1 tiles.
+ * Default:  false
+ * @default  false
  *
- * @param X Offset Tag 1
- * @desc X Offset of Terrain Tag 1 (-X moves Left).
- * @type number
- * @default 0
+ * @param    X Offset Tag 1
+ * @type     number
+ * @desc     X Offset of Terrain Tag 1 (-X moves Left).
+ * @max      2147483647
+ * @min     -2147483548
+ * @default  0
  * @decimals 0
- * @max  2147483647
- * @min -2147483548
- * @parent Tag 1 Enable
+ * @parent   Tag 1 Enable
  *
- * @param Y Offset Tag 1
- * @desc Y Offset of Terrain Tag 1 (-Y moves Up).
- * @type number
- * @default 0
+ * @param    Y Offset Tag 1
+ * @type     number
+ * @desc     Y Offset of Terrain Tag 1 (-Y moves Up).
+ 
+ * @default  0
  * @decimals 0
- * @max  2147483647
- * @min -2147483548
- * @parent Tag 1 Enable
+ * @max      2147483647
+ * @min     -2147483548
+ * @parent   Tag 1 Enable
  *
- * @param Layer Tag 1
- * @desc Override the tile Layer.
- * @type select
- * @option Upper
- * @option Normal
- * @option Lower
- * @default Normal
+ * @param    Layer Tag 1
+ * @type     select
+ * @desc     Override the tile Layer.
+ * @option   Upper
+ * @option   Normal
+ * @option   Lower
+ * @default  Normal
+ * @parent   Tag 1 Enable
  *
  *
- * @param Tag 2 Enable
- * @desc Enable Offsets for Terrain Tag 2 tiles.
- * @type boolean
- * @default false
+ * @param    Tag 2 Enable
+ * @type     boolean
+ * @desc     Enable Offsets for Terrain Tag 2 tiles.
+ * @default  false
  *
- * @param X Offset Tag 2
- * @desc X Offset of Terrain Tag 2 (-X moves Left).
- * @type number
- * @default 0
+ * @param    X Offset Tag 2
+ * @type     number
+ * @desc     X Offset of Terrain Tag 2 (-X moves Left).
+ * @default  0
  * @decimals 0
- * @max  2147483647
- * @min -2147483548
- * @parent Tag 2 Enable
+ * @max      2147483647
+ * @min     -2147483548
+ * @parent   Tag 2 Enable
  *
- * @param Y Offset Tag 2
- * @desc Y Offset of Terrain Tag 2 (-Y moves Up).
- * @type number
- * @default 0
+ * @param    Y Offset Tag 2
+ * @type     number
+ * @desc     Y Offset of Terrain Tag 2 (-Y moves Up).
+ * @default  0
  * @decimals 0
- * @max  2147483647
- * @min -2147483548
- * @parent Tag 2 Enable
+ * @max      2147483647
+ * @min     -2147483548
+ * @parent   Tag 2 Enable
  *
- * @param Layer Tag 2
- * @desc Override the tile Layer.
- * @type select
- * @option Upper
- * @option Normal
- * @option Lower
- * @default Normal
+ * @param    Layer Tag 2
+ * @type     select
+ * @desc     Override the tile Layer.
+ * @option   Upper
+ * @option   Normal
+ * @option   Lower
+ * @default  Normal
+ * @parent   Tag 2 Enable
  *
  *
- * @param Tag 3 Enable
- * @desc Enable Offsets for Terrain Tag 3 tiles.
- * @type boolean
- * @default false
+ * @param    Tag 3 Enable
+ * @type     boolean
+ * @desc     Enable Offsets for Terrain Tag 3 tiles.
+ * @default  false
  *
- * @param X Offset Tag 3
- * @desc X Offset of Terrain Tag 3 (-X moves Left).
- * @type number
- * @default 0
+ * @param    X Offset Tag 3
+ * @type     number
+ * @desc     X Offset of Terrain Tag 3 (-X moves Left).
+ * @default  0
  * @decimals 0
- * @max  2147483647
- * @min -2147483548
- * @parent Tag 3 Enable
+ * @max      2147483647
+ * @min     -2147483548
+ * @parent   Tag 3 Enable
  *
- * @param Y Offset Tag 3
- * @desc Y Offset of Terrain Tag 3 (-Y moves Up).
- * @type number
- * @default 0
+ * @param    Y Offset Tag 3
+ * @type     number
+ * @desc     Y Offset of Terrain Tag 3 (-Y moves Up).
+ * @default  0
  * @decimals 0
- * @max  2147483647
- * @min -2147483548
- * @parent Tag 3 Enable
+ * @max      2147483647
+ * @min     -2147483548
+ * @parent   Tag 3 Enable
  *
- * @param Layer Tag 3
- * @desc Override the tile Layer.
- * @type select
- * @option Upper
- * @option Normal
- * @option Lower
- * @default Normal
+ * @param    Layer Tag 3
+ * @type     select
+ * @desc     Override the tile Layer.
+ * @option   Upper
+ * @option   Normal
+ * @option   Lower
+ * @default  Normal
+ * @parent   Tag 3 Enable
  *
  *
- * @param Tag 4 Enable
- * @desc Enable Offsets for Terrain Tag 4 tiles.
- * @type boolean
- * @default false
+ * @param    Tag 4 Enable
+ * @type     boolean
+ * @desc     Enable Offsets for Terrain Tag 4 tiles.
+ * @default  false
  *
- * @param X Offset Tag 4
- * @desc X Offset of Terrain Tag 4 (-X moves Left).
- * @type number
- * @default 0
+ * @param    X Offset Tag 4
+ * @type     number
+ * @desc     X Offset of Terrain Tag 4 (-X moves Left).
+ * @default  0
  * @decimals 0
- * @max  2147483647
- * @min -2147483548
- * @parent Tag 4 Enable
+ * @max      2147483647
+ * @min     -2147483548
+ * @parent   Tag 4 Enable
  *
- * @param Y Offset Tag 4
- * @desc Y Offset of Terrain Tag 4 (-Y moves Up).
- * @type number
- * @default 0
+ * @param    Y Offset Tag 4
+ * @type     number
+ * @desc     Y Offset of Terrain Tag 4 (-Y moves Up).
+ * @default  0
  * @decimals 0
- * @max  2147483647
- * @min -2147483548
- * @parent Tag 4 Enable
+ * @max      2147483647
+ * @min     -2147483548
+ * @parent   Tag 4 Enable
  *
- * @param Layer Tag 4
- * @desc Override the tile Layer.
- * @type select
- * @option Upper
- * @option Normal
- * @option Lower
- * @default Normal
+ * @param    Layer Tag 4
+ * @type     select
+ * @desc     Override the tile Layer.
+ * @option   Upper
+ * @option   Normal
+ * @option   Lower
+ * @default  Normal
+ * @parent   Tag 4 Enable
  *
  *
- * @param Tag 5 Enable
- * @desc Enable Offsets for Terrain Tag 5 tiles.
- * @type boolean
- * @default false
+ * @param    Tag 5 Enable
+ * @type     boolean
+ * @desc     Enable Offsets for Terrain Tag 5 tiles.
+ * @default  false
  *
- * @param X Offset Tag 5
- * @desc X Offset of Terrain Tag 5 (-X moves Left).
- * @type number
- * @default 0
+ * @param    X Offset Tag 5
+ * @type     number
+ * @desc     X Offset of Terrain Tag 5 (-X moves Left).
+ * @default  0
  * @decimals 0
- * @max  2147483647
- * @min -2147483548
- * @parent Tag 5 Enable
+ * @max      2147483647
+ * @min     -2147483548
+ * @parent   Tag 5 Enable
  *
- * @param Y Offset Tag 5
- * @desc Y Offset of Terrain Tag 5 (-Y moves Up).
- * @type number
- * @default 0
+ * @param    Y Offset Tag 5
+ * @type     number
+ * @desc     Y Offset of Terrain Tag 5 (-Y moves Up).
+ * @default  0
  * @decimals 0
- * @max  2147483647
- * @min -2147483548
- * @parent Tag 5 Enable
+ * @max      2147483647
+ * @min     -2147483548
+ * @parent   Tag 5 Enable
  *
- * @param Layer Tag 5
- * @desc Override the tile Layer.
- * @type select
- * @option Upper
- * @option Normal
- * @option Lower
- * @default Normal
+ * @param    Layer Tag 5
+ * @type     select
+ * @desc     Override the tile Layer.
+ * @option   Upper
+ * @option   Normal
+ * @option   Lower
+ * @default  Normal
+ * @parent   Tag 5 Enable
  *
  *
- * @param Tag 6 Enable
- * @desc Enable Offsets for Terrain Tag 1 tiles.
- * @type boolean
- * @default false
+ * @param    Tag 6 Enable
+ * @type     boolean
+ * @desc     Enable Offsets for Terrain Tag 1 tiles.
+ * @default  false
  *
- * @param X Offset Tag 6
- * @desc X Offset of Terrain Tag 6 (-X moves Left).
- * @type number
- * @default 0
+ * @param    X Offset Tag 6
+ * @type     number
+ * @desc     X Offset of Terrain Tag 6 (-X moves Left).
+ * @default  0
  * @decimals 0
- * @max  2147483647
- * @min -2147483548
- * @parent Tag 6 Enable
+ * @max      2147483647
+ * @min     -2147483548
+ * @parent   Tag 6 Enable
  *
- * @param Y Offset Tag 6
- * @desc Y Offset of Terrain Tag 6 (-Y moves Up).
- * @type number
- * @default 0
+ * @param    Y Offset Tag 6
+ * @type     number
+ * @desc     Y Offset of Terrain Tag 6 (-Y moves Up).
+ * @default  0
  * @decimals 0
- * @max  2147483647
- * @min -2147483548
- * @parent Tag 6 Enable
+ * @max      2147483647
+ * @min     -2147483548
+ * @parent   Tag 6 Enable
  *
- * @param Layer Tag 6
- * @desc Override the tile Layer.
- * @type select
- * @option Upper
- * @option Normal
- * @option Lower
- * @default Normal
+ * @param    Layer Tag 6
+ * @type     select
+ * @desc     Override the tile Layer.
+ * @option   Upper
+ * @option   Normal
+ * @option   Lower
+ * @default  Normal
+ * @parent   Tag 6 Enable
  *
  *
- * @param Tag 7 Enable
- * @desc Enable Offsets for Terrain Tag 7 tiles.
- * @type boolean
- * @default false
+ * @param    Tag 7 Enable
+ * @type     boolean
+ * @desc     Enable Offsets for Terrain Tag 7 tiles.
+ * @default  false
  *
- * @param X Offset Tag 7
- * @desc X Offset of Terrain Tag 7 (-X moves Left).
- * @type number
- * @default 0
+ * @param    X Offset Tag 7
+ * @type     number
+ * @desc     X Offset of Terrain Tag 7 (-X moves Left).
+ * @default  0
  * @decimals 0
- * @max  2147483647
- * @min -2147483548
- * @parent Tag 7 Enable
+ * @max      2147483647
+ * @min     -2147483548
+ * @parent   Tag 7 Enable
  *
- * @param Y Offset Tag 7
- * @desc Y Offset of Terrain Tag 7 (-Y moves Up).
- * @type number
- * @default 0
+ * @param    Y Offset Tag 7
+ * @type     number
+ * @desc     Y Offset of Terrain Tag 7 (-Y moves Up).
+ * @default  0
  * @decimals 0
- * @max  2147483647
- * @min -2147483548
- * @parent Tag 7 Enable
+ * @max      2147483647
+ * @min     -2147483548
+ * @parent   Tag 7 Enable
  *
- * @param Layer Tag 7
- * @desc Override the tile Layer.
- * @type select
- * @option Upper
- * @option Normal
- * @option Lower
- * @default Normal
+ * @param    Layer Tag 7
+ * @type     select
+ * @desc     Override the tile Layer.
+ * @option   Upper
+ * @option   Normal
+ * @option   Lower
+ * @default  Normal
+ * @parent   Tag 7 Enable
  *
  *
- * @param Tag 0 Enable
- * @desc Enable Offsets for Terrain Tag 0 tiles. All tiles default to this so you probably want to leave this one alone!!!
- * @type boolean
- * @default false
+ * @param    Tag 0 Enable
+ * @type     boolean
+ * @desc     Enable Offsets for Terrain Tag 0 tiles. All tiles default to this so you probably want to leave this one alone!!!
+ * @default  false
  *
- * @param X Offset Tag 0
- * @desc X Offset of Terrain Tag 0 (-X moves Left).
- * @type number
- * @default 0
+ * @param    X Offset Tag 0
+ * @type     number
+ * @desc     X Offset of Terrain Tag 0 (-X moves Left).
+ * @default  0
  * @decimals 0
- * @max  2147483647
- * @min -2147483548
- * @parent Tag 0 Enable
+ * @max      2147483647
+ * @min     -2147483548
+ * @parent   Tag 0 Enable
  *
- * @param Y Offset Tag 0
- * @desc Y Offset of Terrain Tag 0 (-Y moves Up).
- * @type number
- * @default 0
+ * @param    Y Offset Tag 0
+ * @type     number
+ * @desc     Y Offset of Terrain Tag 0 (-Y moves Up).
+ * @default  0
  * @decimals 0
- * @max  2147483647
- * @min -2147483548
- * @parent Tag 0 Enable
+ * @max      2147483647
+ * @min     -2147483548
+ * @parent   Tag 0 Enable
  *
- * @param Layer Tag 0
- * @desc Override the tile Layer.
- * @type select
- * @option Upper
- * @option Normal
- * @option Lower
- * @default Normal
- *
+ * @param    Layer Tag 0
+ * @type     select
+ * @desc     Override the tile Layer.
+ * @option   Upper
+ * @option   Normal
+ * @option   Lower
+ * @default  Normal
+ * @parent   Tag 0 Enable
 */
 'use strict';
 
 (function() {
-	const param = {
+	const module = {
 		plugin_name:'nyb_TileOffsets',
 		string:function(name, def) {
 			let value = PluginManager.parameters(this.plugin_name)[name];
@@ -329,70 +338,54 @@
 	};
 	
 	let ConfigInfo = [];
-	
-	if(param.bool('Tag 1 Enable', false)) {
-		ConfigInfo[1] = {
-			x:(param.sint('X Offset Tag 1', 0)),
-			y:(param.sint('Y Offset Tag 1', 0)),
-			layer:(param.string('Layer Tag 1', 'Normal'))
-		};
-	}
-	
-	if(param.bool('Tag 2 Enable', false)) {
-		ConfigInfo[2] = {
-			x:(param.sint('X Offset Tag 2', 0)),
-			y:(param.sint('Y Offset Tag 2', 0)),
-			layer:(param.string('Layer Tag 3', 'Normal'))
-		};
-	}
-	
-	if(param.bool('Tag 3 Enable', false)) {
-		ConfigInfo[3] = {
-			x:(param.sint('X Offset Tag 3', 0)),
-			y:(param.sint('Y Offset Tag 3', 0)),
-			layer:(param.string('Layer Tag 3', 'Normal'))
-		};
-	}
-	
-	if(param.bool('Tag 4 Enable', false)) {
-		ConfigInfo[4] = {
-			x:(param.sint('X Offset Tag 4', 0)),
-			y:(param.sint('Y Offset Tag 4', 0)),
-			layer:(param.string('Layer Tag 4', 'Normal'))
-		};
-	}
-	
-	if(param.bool('Tag 5 Enable', false)) {
-		ConfigInfo[5] = {
-			x:(param.sint('X Offset Tag 5', 0)),
-			y:(param.sint('Y Offset Tag 5', 0)),
-			layer:(param.string('Layer Tag 5', 'Normal'))
-		};
-	}
-	
-	if(param.bool('Tag 6 Enable', false)) {
-		ConfigInfo[6] = {
-			x:(param.sint('X Offset Tag 6', 0)),
-			y:(param.sint('Y Offset Tag 6', 0)),
-			layer:(param.string('Layer Tag 6', 'Normal'))
-		};
-	}
-	
-	if(param.bool('Tag 7 Enable', false)) {
-		ConfigInfo[7] = {
-			x:(param.sint('X Offset Tag 7', 0)),
-			y:(param.sint('Y Offset Tag 7', 0)),
-			layer:(param.string('Layer Tag 7', 'Normal'))
-		};
-	}
-	
-	if(param.bool('Tag 0 Enable', false)) {
-		ConfigInfo[0] = {
-			x:(param.sint('X Offset Tag 0', 0)),
-			y:(param.sint('Y Offset Tag 0', 0)),
-			layer:(param.string('Layer Tag 0', 'Normal'))
-		};
-	}
+
+	ConfigInfo[1] = module.bool('Tag 1 Enable', false) ? {
+		x:(module.sint('X Offset Tag 1', 0)),
+		y:(module.sint('Y Offset Tag 1', 0)),
+		layer:(module.string('Layer Tag 1', ''))
+	} : {x:0, y:0, layer:''};
+
+	ConfigInfo[2] = module.bool('Tag 2 Enable', false) ? {
+		x:(module.sint('X Offset Tag 2', 0)),
+		y:(module.sint('Y Offset Tag 2', 0)),
+		layer:(module.string('Layer Tag 2', ''))
+	} : {x:0, y:0, layer:''};
+
+	ConfigInfo[3] = module.bool('Tag 3 Enable', false) ? {
+		x:(module.sint('X Offset Tag 3', 0)),
+		y:(module.sint('Y Offset Tag 3', 0)),
+		layer:(module.string('Layer Tag 3', ''))
+	} : {x:0, y:0, layer:''};
+
+	ConfigInfo[4] = module.bool('Tag 4 Enable', false) ? {
+		x:(module.sint('X Offset Tag 4', 0)),
+		y:(module.sint('Y Offset Tag 4', 0)),
+		layer:(module.string('Layer Tag 4', ''))
+	} : {x:0, y:0, layer:''};
+
+	ConfigInfo[5] = module.bool('Tag 5 Enable', false) ? {
+		x:(module.sint('X Offset Tag 5', 0)),
+		y:(module.sint('Y Offset Tag 5', 0)),
+		layer:(module.string('Layer Tag 5', ''))
+	} : {x:0, y:0, layer:''};
+
+	ConfigInfo[6] = module.bool('Tag 6 Enable', false) ? {
+		x:(module.sint('X Offset Tag 6', 0)),
+		y:(module.sint('Y Offset Tag 6', 0)),
+		layer:(module.string('Layer Tag 6', ''))
+	} : {x:0, y:0, layer:''};
+
+	ConfigInfo[7] = module.bool('Tag 7 Enable', false) ? {
+		x:(module.sint('X Offset Tag 7', 0)),
+		y:(module.sint('Y Offset Tag 7', 0)),
+		layer:(module.string('Layer Tag 7', ''))
+	} : {x:0, y:0, layer:''};
+
+	ConfigInfo[0] = module.bool('Tag 0 Enable', false) ? {
+		x:(module.sint('X Offset Tag 0', 0)),
+		y:(module.sint('Y Offset Tag 0', 0)),
+		layer:(module.string('Layer Tag 0', ''))
+	} : {x:0, y:0, layer:''};
 	
 	const terrainTag = function(x, y, idx) {
 		if ($gameMap.isValid(x, y)) {
@@ -420,54 +413,24 @@
 		const tileId1 = this._readMapData(mx, my, 1);
 		const tileId2 = this._readMapData(mx, my, 2);
 		const tileId3 = this._readMapData(mx, my, 3);
-		const shadowBits = this._readMapData(mx, my, 4);
+		const shadowBits   = this._readMapData(mx, my, 4);
 		const upperTileId1 = this._readMapData(mx, my - 1, 1);
-		const lowerLayer = this.lowerLayer.children[0];
-		const upperLayer = this.upperLayer.children[0];
+		const lowerLayer   = this.lowerLayer.children[0];
+		const upperLayer   = this.upperLayer.children[0];
 		
-		let tag;
-		let layer1;
-		let xoffs1;
-		let yoffs1;
-		
-		let layer2;
-		let xoffs2;
-		let yoffs2;
-		
-		tag = terrainTag(mx, my, 3);
-		
-		if(ConfigInfo[tag] != undefined) {
-			xoffs1 = ConfigInfo[tag].x;
-			yoffs1 = ConfigInfo[tag].y;
-			layer1 = ConfigInfo[tag].layer;
+		let infoA = ConfigInfo[terrainTag(mx, my, 3)];
+		let infoB = ConfigInfo[terrainTag(mx, my, 2)];
+
+		if ((this._isHigherTile(tileId0) || 'Upper' === infoA.layer) && 'Lower' !== infoA.layer) {
+			this._drawTile(upperLayer, tileId0, dx + infoA.x, dy + infoA.y);
 		} else {
-			xoffs1 = 0;
-			yoffs1 = 0;
-			layer1 = '';
+			this._drawTile(lowerLayer, tileId0, dx + infoA.x, dy + infoA.y);
 		}
 		
-		tag = terrainTag(mx, my, 2);
-		
-		if(ConfigInfo[tag] != undefined) {
-			xoffs2 = ConfigInfo[tag].x;
-			yoffs2 = ConfigInfo[tag].y;
-			layer2 = ConfigInfo[tag].layer;
+		if ((this._isHigherTile(tileId1) || 'Upper' === infoB.layer) && 'Lower' !== infoB.layer) {
+			this._drawTile(upperLayer, tileId1, dx + infoB.x, dy + infoB.y);
 		} else {
-			xoffs2 = 0;
-			yoffs2 = 0;
-			layer2 = '';
-		}
-		
-		if (this._isHigherTile(tileId0) || 'Upper' === layer1 && 'Lower' !== layer1) {
-			this._drawTile(upperLayer, tileId0, dx + xoffs1, dy + yoffs1);
-		} else {
-			this._drawTile(lowerLayer, tileId0, dx + xoffs1, dy + yoffs1);
-		}
-		
-		if (this._isHigherTile(tileId1) || 'Upper' === layer2 && 'Lower' !== layer2) {
-			this._drawTile(upperLayer, tileId1, dx + xoffs2, dy + yoffs2);
-		} else {
-			this._drawTile(lowerLayer, tileId1, dx + xoffs2, dy + yoffs2);
+			this._drawTile(lowerLayer, tileId1, dx + infoB.x, dy + infoB.y);
 		}
 
 		this._drawShadow(lowerLayer, shadowBits, dx, dy);
@@ -478,44 +441,23 @@
 			}
 		}
 		
-		tag = terrainTag(mx, my, 1);
-		
-		if(ConfigInfo[tag] != undefined) {
-			xoffs1 = ConfigInfo[tag].x;
-			yoffs1 = ConfigInfo[tag].y;
-			layer1 = ConfigInfo[tag].layer;
-		} else {
-			xoffs1 = 0;
-			yoffs1 = 0;
-			layer1 = '';
-		}
-		
-		tag = terrainTag(mx, my, 0);
-		
-		if(ConfigInfo[tag] != undefined) {
-			xoffs2 = ConfigInfo[tag].x;
-			yoffs2 = ConfigInfo[tag].y;
-			layer2 = ConfigInfo[tag].layer;
-		} else {
-			xoffs2 = 0;
-			yoffs2 = 0;
-			layer2 = '';
-		}
+		infoA = ConfigInfo[terrainTag(mx, my, 1)];
+		infoB = ConfigInfo[terrainTag(mx, my, 0)];
 
 		if (this._isOverpassPosition(mx, my)) {
-			this._drawTile(upperLayer, tileId2, dx + xoffs1, dy + yoffs1);
-			this._drawTile(upperLayer, tileId3, dx + xoffs2, dy + yoffs2);
+			this._drawTile(upperLayer, tileId2, dx + infoA.x, dy + infoA.y);
+			this._drawTile(upperLayer, tileId3, dx + infoB.x, dy + infoB.y);
 		} else {
-			if (this._isHigherTile(tileId2) || 'Upper' === layer1 && 'Lower' !== layer1) {
-				this._drawTile(upperLayer, tileId2, dx + xoffs1, dy + yoffs1);
+			if ((this._isHigherTile(tileId2) || 'Upper' === infoA.layer) && 'Lower' !== infoA.layer) {
+				this._drawTile(upperLayer, tileId2, dx + infoA.x, dy + infoA.y);
 			} else {
-				this._drawTile(lowerLayer, tileId2, dx + xoffs1, dy + yoffs1);
+				this._drawTile(lowerLayer, tileId2, dx + infoA.x, dy + infoA.y);
 			}
 			
-			if (this._isHigherTile(tileId3) || 'Upper' === layer2 && 'Lower' !== layer2) {
-				this._drawTile(upperLayer, tileId3, dx + xoffs2, dy + yoffs2);
+			if ((this._isHigherTile(tileId3) || 'Upper' === infoB.layer) && 'Lower' !== infoB.layer) {
+				this._drawTile(upperLayer, tileId3, dx + infoB.x, dy + infoB.y);
 			} else {
-				this._drawTile(lowerLayer, tileId3, dx + xoffs2, dy + yoffs2);
+				this._drawTile(lowerLayer, tileId3, dx + infoB.x, dy + infoB.y);
 			}
 		}
 	};
