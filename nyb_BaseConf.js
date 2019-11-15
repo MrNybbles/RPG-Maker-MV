@@ -1,5 +1,5 @@
 /* nyb_BaseConf.js
- * Version: 20191114
+ * Version: 20191115
 */
 /*:
  * @plugindesc Basic Configuration for any game.
@@ -270,9 +270,9 @@
 	ImageCache.limit = module.uint('imageCacheLimit', 10) * 1000000;
 
 	SceneManager._screenWidth  = module.uint('gameWidth', 1248);
-    SceneManager._screenHeight = module.uint('gameHeight', 720);
-    SceneManager._boxWidth     = Math.min(module.uint('menuWidth',  816), SceneManager._screenWidth);
-    SceneManager._boxHeight    = Math.min(module.uint('menuHeight', 720), SceneManager._screenHeight);
+	SceneManager._screenHeight = module.uint('gameHeight', 720);
+	SceneManager._boxWidth     = Math.min(module.uint('menuWidth',  816), SceneManager._screenWidth);
+	SceneManager._boxHeight    = Math.min(module.uint('menuHeight', 720), SceneManager._screenHeight);
 
 	if(module.bool('disableFullscreen', false)) {
 		Graphics._switchFullScreen = function() {
@@ -300,7 +300,7 @@
 		const maxToFullscreen  = module.bool('maxToFullscreen',  false);
 		const unmToFullscreen  = module.bool('unmToFullscreen',  false);
 		const disableResize    = module.bool('disableResize',    false);
-		let   ignoreOnceHack;
+		let   ignoreOnceHack; // Stop startMaximized triggering maxToFullscreen
 		
 		Scene_Boot.prototype.initialize = function() {
 			const win = require('nw.gui').Window.get();
