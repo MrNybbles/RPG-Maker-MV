@@ -1,5 +1,5 @@
 /* nyb_TileOffsets.js
- * Version: 20191115
+ * Version: 20191115b
 */
 /*:
  * @plugindesc Enables Tile Offsets via Terrain Tags!
@@ -51,6 +51,30 @@
  * 4) It is STRONGLY recommended that you NEVER use Tag 0!
  *    Although unlikely, you may have a legit use for using it.
  *    However, Terrain Tag 0 is listed last to discourage its use!
+ *
+ *
+ * [License]
+ *  MIT https://opensource.org/licenses/MIT
+ *
+ *  Copyright 2019 MrNybbles
+ *  Permission is hereby granted, free of charge, to any person obtaining
+ *  a copy of this software and associated documentation files
+ *  (the "Software"), to deal in the Software without restriction,
+ *  including without limitation the rights to use, copy, modify, merge,
+ *  publish, distribute, sublicense, and/or sell copies of the Software,
+ *  and to permit persons to whom the Software is furnished to do so,
+ *  subject to the following conditions:
+ *
+ *  The above copyright notice and this permission notice shall be
+ *  included in all copies or substantial portions of the Software.
+ *
+ *  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ *  EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ *  MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+ *  IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+ *  CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+ *  TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ *  SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
  *
  * @param    Tag 1 Enable
