@@ -46,6 +46,14 @@ This very useful plugin allows for common Event Commands to be executed by diffe
 Just make sure the common Event Commands refer to 'This Event' when the Calling Map Event is the one needing to do something.
 
 
+### nyb_CompressedDataDir.js
+Compresses the .json database files in the `data/` directory (including map files).
+After deployment run the game once to compress all the database files.
+This effectivly compresses and obfuscates the file contents.
+
+Does not compress during Play Test mode.
+
+
 ### nyb_DB.js
 Adds a way to load additional database files to a global location when the game starts.
 This is a very situational plugin.
