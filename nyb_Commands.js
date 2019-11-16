@@ -1,5 +1,5 @@
 /* nyb_Commands.js
- * Version: 20191113
+ * Version: 20191115
 */
 /*:
  * @plugindesc Adds Plugin Commands: comevt, mapevt, scene.
@@ -74,7 +74,7 @@
 'use strict';
 
 (function() {
-	const param = {
+	const module = {
 		plugin_name:'nyb_Commands',
 		string:function(name, def) {
 			const value = PluginManager.parameters(this.plugin_name)[name];
@@ -82,19 +82,15 @@
 		}
 	};
 	
-	const cmd_scene  = param.string('Scene Command', 'scene');
-	const cmd_comevt = param.string('Common Event Command', 'comevt');
-	const cmd_mapevt = param.string('Map Event Command', 'mapevt');
-	
 	const parse = function(arg, def) {
 		return	(arg && '$' === arg.charAt(0))            ?
-				($gameVariables._data[arg.slice(1)] || 0) :
-				(parseInt(arg, 10) || def || 0);
+			($gameVariables._data[arg.slice(1)] || 0) :
+			(parseInt(arg, 10) || def || 0);
 	};
 	
 	const do_comevt = function(argv) {
 		const sid = parse(argv[0], 0);
-		const aid = parse(argv[1], $gameMap._interpreter.eventId());
+		const aid = parse(argv[1], $gameMap._interpreter._eventId);
 		const scr = $dataCommonEvents[sid];
 		const evt = $dataMap.events[aid];
 		
@@ -105,13 +101,13 @@
 			if(!$gameMap._interpreter.isRunning()) {
 				$gameMap._interpreter.setup(evt.list, aid);
 			} else {
-				const oldId = $gameMap._interpreter.eventId;
-				$gameMap._interpreter.eventId = aid;
+				const oldId = $gameMap._interpreter._eventId;
+				$gameMap._interpreter._eventId = aid;
 				$gameMap._interpreter.setupChild(evt.list,
 					$gameMap._interpreter.isOnCurrentMap() ?
-					$gameMap._interpreter.eventId : 0
+					$gameMap._interpreter._eventId : 0
 				);
-				$gameMap._interpreter.eventId = oldId;
+				$gameMap._interpreter._eventId = oldId;
 			}
 			evt._eventId = aid;
 		}
@@ -119,7 +115,7 @@
 
 	const do_mapevt = function(argv) {
 		const sid = parse(argv[0], 0);
-		const aid = parse(argv[1], $gameMap._interpreter.eventId());
+		const aid = parse(argv[1], $gameMap._interpreter._eventId);
 		const scr = $gameMap.event(sid);
 		const evt = $dataMap.events[aid];
 		
@@ -130,14 +126,14 @@
 			if(!$gameMap._interpreter.isRunning()) {
 				$gameMap._interpreter.setup(evt.list, aid);
 			} else {
-				const oldId = $gameMap._interpreter.eventId;
+				const oldId = $gameMap._interpreter._eventId;
 				
-				$gameMap._interpreter.eventId = aid;
+				$gameMap._interpreter._eventId = aid;
 				$gameMap._interpreter.setupChild(evt.list,
 					$gameMap._interpreter.isOnCurrentMap() ?
-					$gameMap._interpreter.eventId : 0
+					$gameMap._interpreter._eventId : 0
 				);
-				$gameMap._interpreter.eventId = oldId;
+				$gameMap._interpreter._eventId = oldId;
 			}
 			evt._eventId = aid;
 		}
@@ -146,10 +142,10 @@
 	const do_scene = function(argv) {
 		switch(argv[0]) {
 			case 'goto': {
-				SceneManager.goto(eval(args[1]));
+				SceneManager.goto(eval(argv[1]));
 			} break;
 			case 'push': {
-				SceneManager.push(eval(args[1]));
+				SceneManager.push(eval(argv[1]));
 			} break;
 			case 'pop': {
 				if(SceneManager._stack.length > 1) {
@@ -159,9 +155,7 @@
 				}
 			} break;
 			default: {
-				console.error('Unknown sub-command of command ' +
-					cmd_scene + ' ' + args[0]
-				);
+				console.error('Unknown scene sub-command ' + argv[0]);
 			} break;
 		}
 	};
@@ -191,8 +185,8 @@
 		}
 	}
 	
-	cmd.add(cmd_scene,  do_scene);
-	cmd.add(cmd_comevt, do_comevt);
-	cmd.add(cmd_mapevt, do_mapevt);
+	cmd.add(module.string('Scene Command',        'scene'),  do_scene);
+	cmd.add(module.string('Common Event Command', 'comevt'), do_comevt);
+	cmd.add(module.string('Map Event Command',    'mapevt'), do_mapevt);
 	
 })();
