@@ -1,5 +1,5 @@
 /* nyb_MouseCommand.js
- * Version: 20191115b
+ * Version: 20191116
 */
 /*:
  * @plugindesc Hide Mouse Pointer when Idle and set the mouse cursor with plugin commands.
@@ -57,29 +57,6 @@
  *
  * mouse unlock
  *    Unlocks the mouse.
- *
- * [License]
- *  MIT https://opensource.org/licenses/MIT
- *
- *  Copyright 2019 MrNybbles
- *  Permission is hereby granted, free of charge, to any person obtaining
- *  a copy of this software and associated documentation files
- *  (the "Software"), to deal in the Software without restriction,
- *  including without limitation the rights to use, copy, modify, merge,
- *  publish, distribute, sublicense, and/or sell copies of the Software,
- *  and to permit persons to whom the Software is furnished to do so,
- *  subject to the following conditions:
- *
- *  The above copyright notice and this permission notice shall be
- *  included in all copies or substantial portions of the Software.
- *
- *  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
- *  EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
- *  MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
- *  IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
- *  CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
- *  TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
- *  SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
  * @param   Auto-hide Mouse
  * @type    boolean
@@ -232,44 +209,48 @@
 	if(cmdName.length > 0) {
 		const Game_Interpreter_pluginCommand = Game_Interpreter.prototype.pluginCommand;
 		Game_Interpreter.prototype.pluginCommand = function(command, args) {
-			switch(args[0]) {
-				case 'cursor': {
-					mouse.set_cursor(args[1]);
-				} break;
-				case 'hide': {
-					mouse.hide();
-				} break;
-				case 'show': {
-					mouse.show();
-				} break;
-				case 'timeout': {
-					switch(args[1]) {
-						case 'true':
-						case 'enable': {
-							mouse.enable_timeout();
-						} break;
-						case 'false':
-						case 'disable': {
-							mouse.disable_timeout();
-						} break;
-						default: {
-							if(!isNaN(args[1])) {
-								mouse.timeout = module.uint_clamp(args[1]);
-							}
-						} break;
-					}
-				} break;
-				case 'wiggle': {
-					if(!isNaN(args[1])) {
-						mouse.wiggle = module.uint_clamp(args[1]);
-					}
-				} break;
-				case 'lock': {
-					mouse.lock();
-				} break;
-				case 'unlock': {
-					mouse.unlock();
-				} break;
+			if(cmdName === command) {
+				switch(args[0]) {
+					case 'cursor': {
+						mouse.set_cursor(args[1]);
+					} break;
+					case 'hide': {
+						mouse.hide();
+					} break;
+					case 'show': {
+						mouse.show();
+					} break;
+					case 'timeout': {
+						switch(args[1]) {
+							case 'true':
+							case 'enable': {
+								mouse.enable_timeout();
+							} break;
+							case 'false':
+							case 'disable': {
+								mouse.disable_timeout();
+							} break;
+							default: {
+								if(!isNaN(args[1])) {
+									mouse.timeout = module.uint_clamp(args[1]);
+								}
+							} break;
+						}
+					} break;
+					case 'wiggle': {
+						if(!isNaN(args[1])) {
+							mouse.wiggle = module.uint_clamp(args[1]);
+						}
+					} break;
+					case 'lock': {
+						mouse.lock();
+					} break;
+					case 'unlock': {
+						mouse.unlock();
+					} break;
+				}
+			} else {
+				Game_Interpreter_pluginCommand.call(this, command, args);
 			}
 		}
 	}
