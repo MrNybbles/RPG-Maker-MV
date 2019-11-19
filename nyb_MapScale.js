@@ -1,26 +1,34 @@
 /* nyb_MapScale.js
- * Version: 20191117
+ * Version: 20191118c
 */
 /*:
- * @plugindesc Scales only the map leaving the GUI at normal size.
+ * @plugindesc Scales the map, everything else normal size.
  * @author MrNybbles
  *
  * @help [Description]
- *  Allows a default Map Scale to be set. This can be changed at any
+ *  Allows a Map Scale to be set. This can be changed at any
  *  time using the specified plugin command name.
  *
  * [Notes]
- * 1) Map Scale can be any real number >= 1.0 so fractions are allowed.
+ * 1) Map Scale can be any real number >= 1.0. Fractions are allowed
+ *   (and somehow look decent).
  * 2) Plugin Command Name can be blank to disable the command.
+ * 3) If other plugins break due to needing the real tile width/height they
+ *    they can be modified to use tileRealWidth() and tileRealHeight() if
+ *    the license permits modifications. This option is disabled by default.
  *
  * [Known Issues]
- *  This plugin does not ask the game to redraw the map after changing the scale.
- *  Changing the map scale is best done in the pause menu which keeps a
- *  blurred copy as a background, then redraws the map when you exit the
- *  menu. It is left up to the game dev to account for this.
+ *  This plugin does not ask the game to redraw the map after changing scale
+ *  which may cause immediate issues (event if not noticed right away).
+ *  After changing the Map Scale during game play either reload the map or
+ *  transfer to another map.
+ *  It is left up to the game dev to account for this.
  *
- *  When scale is < 1.0 the game acts weird
- *  (like walking off the edge of the map weird).
+ *  Any scale < 1.0 causes the game to not render correctly and is not supported.
+ *
+ *  Currently the Parallax functions are untouched (but use
+ *  Game_Map.tileWidth() and Game_Map.tileHeight()). This may be an issue for
+ *  anyone using a Parallax Mapping technique.
  *
  * [License]
  *  MIT https://opensource.org/licenses/MIT
@@ -54,11 +62,17 @@
  * @min      1.0
  * @decimals 2
  *
- * @param   Command Name
- * @type    string
- * @desc    Name of Plugin Command change the Map's Scale.
- * Default: mapscale
- * @default mapscale
+ * @param    Command Name
+ * @type     string
+ * @desc     Name of Plugin Command change the Map's Scale.
+ * Default:  mapscale
+ * @default  mapscale
+ *
+ * @param   Export Real Width/Height
+ * @type    boolean
+ * @desc    Adds tileRealWidth() and tileRealHeight() to Game_Map.prototype.
+ * Default: false
+ * @default false
 */
 'use strict';
 
@@ -71,6 +85,10 @@
 		string:function(name, def) {
 			const value = PluginManager.parameters(this.plugin_name)[name];
 			return 'string' === typeof(value) ? value : def;
+		},
+		bool:function(name, def) {
+			const value = PluginManager.parameters(this.plugin_name)[name];
+			return value ? 'true' === value : def;
 		},
 		real:function(name, def) {
 			const value = Number(PluginManager.parameters(this.plugin_name)[name]);
@@ -87,16 +105,47 @@
 	const cmdName = module.string('Command Name', '');
 	
 	const Spriteset_Map_createTilemap = Spriteset_Map.prototype.createTilemap;
+	const Spriteset_Map_loadTileset   = Spriteset_Map.prototype.loadTileset;
 	const Game_Map_screenTileX = Game_Map.prototype.screenTileX;
 	const Game_Map_screenTileY = Game_Map.prototype.screenTileY;
-	const Game_Player_centerX = Game_Player.prototype.centerX;
-	const Game_Player_centerY = Game_Player.prototype.centerY;
+	const Game_Map_tileWidth   = Game_Map.prototype.tileWidth;
+	const Game_Map_tileHeight  = Game_Map.prototype.tileHeight;
 	
 	Spriteset_Map.prototype.createTilemap = function() {
 		Spriteset_Map_createTilemap.call(this);
 		
 		this._tilemap.scale.x = module.scale;
 		this._tilemap.scale.y = module.scale;
+	};
+	
+	Spriteset_Map.prototype.loadTileset = function() {
+		this._tilemap.tileWidth  = Game_Map_tileWidth.call(this);
+		this._tilemap.tileHeight = Game_Map_tileHeight.call(this);
+		Spriteset_Map_loadTileset.call(this);
+	};
+	
+	Spriteset_Map.prototype.updateTilemap = function() {
+		this._tilemap.origin.x = $gameMap.displayX() * Game_Map_tileWidth.call(this);
+		this._tilemap.origin.y = $gameMap.displayY() * Game_Map_tileHeight.call(this);
+	};
+	
+	Game_CharacterBase.prototype.screenX = function() {
+		var tw = Game_Map_tileWidth.call(this);
+		return Math.round(this.scrolledX() * tw + tw * 0.5);
+	};
+	
+	Game_CharacterBase.prototype.screenY = function() {
+		var th = Game_Map_tileWidth.call(this);
+		return Math.round(this.scrolledY() * th + th -
+						  this.shiftY() - this.jumpHeight());
+	};
+	
+	Game_Map.prototype.tileWidth = function() {
+		return Game_Map_tileWidth.call(this) * module.scale;
+	};
+	
+	Game_Map.prototype.tileHeight = function() {
+		return Game_Map_tileHeight.call(this) * module.scale;
 	};
 	
 	Game_Map.prototype.screenTileX = function() {
@@ -107,27 +156,15 @@
 		return Game_Map_screenTileY.call(this) * module.coefficient;
 	};
 	
-	Game_Map.prototype.canvasToMapX = function(x) {
-		var tileWidth = this.tileWidth() * module.scale;
-		var originX = this._displayX * tileWidth;
-		var mapX = Math.floor((originX + x) / tileWidth);
-		return this.roundX(mapX);
-	};
-
-	Game_Map.prototype.canvasToMapY = function(y) {
-		var tileHeight = this.tileHeight() * module.scale;
-		var originY = this._displayY * tileHeight;
-		var mapY = Math.floor((originY + y) / tileHeight);
-		return this.roundY(mapY);
-	};
-
-	Game_Player.prototype.centerX = function() {
-		return Game_Player_centerX.call(this) * module.coefficient;
-	};
-
-	Game_Player.prototype.centerY = function() {
-		return Game_Player_centerY.call(this) * module.coefficient;
-	};
+	if(module.bool('Export Real Width/Height', false)) {
+		Game_Map.prototype.tileRealWidth = function() {
+			return Game_Map_tileWidth.call(this);
+		};
+		
+		Game_Map.prototype.tileRealHeight = function() {
+			return Game_Map_tileHeight.call(this);
+		};
+	}
 	
 	if(cmdName.length > 0) {
 		const	Game_Interpreter_pluginCommand =
