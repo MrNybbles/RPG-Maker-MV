@@ -68,6 +68,10 @@ This is a very situational plugin.
 A very useful Developer Tools plugin.
 
 
+### nyb_MapScale.js
+A simple plug-in to magnify the size of the map without affecting parallaxing or GUIs. Works well with 
+
+
 ### nyb_MouseCommand.js
 * Provides automatic hiding of the mouse after being idle for a specified amount of time.
 * The `mouse` command has several uses.
