@@ -1,34 +1,36 @@
 /* nyb_MapScale.js
- * Version: 20191119b
+ * Version: 20191119d
 */
 /*:
- * @plugindesc Scales the map, everything else normal size.
+ * @plugindesc Scales only the map.
  * @author MrNybbles
  *
  * @help [Description]
  *  Allows a Map Scale to be set. This can be changed at any
  *  time using the specified plugin command name.
  *
+ * [Command Syntax]
+ *  mapscale S
+ *  mapscale S F
+ *   S -- Scale
+ *   F -- Duration of zoom, in frames.
+ *
+ *   Any parameter prefixed with a $ will use the contents of the variable
+ *   as the parameter.
+ *
+ * [Plugin Command Example]
+ *  mapscale 2.5 30
+ *
  * [Notes]
  * 1) Map Scale can be any real number >= 1.0. Fractions are allowed
  *   (and somehow look decent).
- * 2) Plugin Command Name can be blank to disable the command.
+ * 2) The zoom effect looks odd when bound by the map edge.
  * 3) If other plugins break due to needing the real tile width/height they
  *    they can be modified to use tileRealWidth() and tileRealHeight() if
  *    the license permits modifications. This option is disabled by default.
- *
- * [Known Issues]
- *  This plugin does not ask the game to redraw the map after changing scale
- *  which may cause immediate issues (event if not noticed right away).
- *  After changing the Map Scale during game play either reload the map or
- *  transfer to another map.
- *  It is left up to the game dev to account for this.
- *
- *  Any scale < 1.0 causes the game to not render correctly and is not supported.
- *
- *  Currently the Parallax functions are untouched (but use
- *  Game_Map.tileWidth() and Game_Map.tileHeight()). This may be an issue for
- *  anyone using a Parallax Mapping technique.
+ * 4) Plugin Command Name can be blank to disable the command.
+ * 5) Because this scales only the map, Parallax Mapping techniques will
+ *    not be scaled by this plugin.
  *
  * [License]
  *  MIT https://opensource.org/licenses/MIT
@@ -56,15 +58,13 @@
  *
  * @param    Map Scale
  * @type     string
- * @desc     Value to scale the game's map by. Must be at least 1.0.
+ * @desc     Scale the map by this value. Must be at least 1.0.
  * Default:  1.0
  * @default  1.0
- * @min      1.0
- * @decimals 2
  *
  * @param    Tile Width
  * @type     number
- * @desc     Width of map tiles, in pixels.
+ * @desc     Width of map a tile, in pixels.
  * Default:  48
  * @default  48
  * @min      1
@@ -72,7 +72,7 @@
  *
  * @param    Tile Height
  * @type     number
- * @desc     Height of map tiles, in pixels.
+ * @desc     Height of a map tile, in pixels.
  * Default:  48
  * @default  48
  * @min      1
@@ -80,13 +80,13 @@
  *
  * @param    Command Name
  * @type     string
- * @desc     Name of Plugin Command change the Map's Scale.
+ * @desc     Plugin Command Name used to change the Map's Scale.
  * Default:  mapscale
  * @default  mapscale
  *
  * @param    Export Real Width/Height
  * @type     boolean
- * @desc     Adds tileRealWidth() and tileRealHeight() to Game_Map.prototype.
+ * @desc     Adds tileRealWidth(), tileRealHeight(), setTileRealWidth(), and setTileRealHeight() to Game_Map.prototype.*
  * Default:  false
  * @default  false
 */
@@ -100,6 +100,10 @@
 		coefficient:1.0,
 		tileRealWidth:48,
 		tileRealHeight:48,
+		ttl:0,
+		delta:0,
+		target:0,
+		next_update:null,
 		string:function(name, def) {
 			const value = PluginManager.parameters(this.plugin_name)[name];
 			return value ? value : def;
@@ -116,10 +120,62 @@
 			const value = Number(PluginManager.parameters(this.plugin_name)[name]);
 			return !isNaN(value) ? value : def;
 		},
-		update:function(scale) {
+		varg:function(arg, def) {
+			return	(arg && '$' === arg.charAt(0))            ?
+					($gameVariables._data[arg.slice(1)] || def) :
+					(parseInt(arg, 10) || def);
+		},
+		set_scale:function(scale) {
 			if(!isNaN(scale)) {
 				this.scale = Math.max(1.0, scale);
 				this.coefficient = 1.0 / this.scale;
+				
+				return true;
+			}
+		},
+		get_tilemap:function() {
+			if(SceneManager._scene) {
+				const spriteset = SceneManager._scene.children.find(
+					(child) => 'Spriteset_Map' === child.constructor.name
+				);
+				if(spriteset) return spriteset._tilemap;
+			}
+			
+			return null;
+		},
+		update:function(scale) {
+			const tilemap = module.get_tilemap();
+			
+			if(tilemap) {
+				if(this.set_scale(scale)) {
+					tilemap.scale.x = module.scale;
+					tilemap.scale.y = module.scale;
+					$gamePlayer.center($gamePlayer.x, $gamePlayer.y);
+				}
+			}
+		},
+		zoomUpdate:function() {
+			module.next_update.call(this);
+			
+			if(module.ttl > 0) {
+				--module.ttl;
+				
+				module.update(module.scale - module.delta);
+			} else {
+				module.update(module.target);
+				SceneManager._scene.updateChildren = module.next_update;
+				module.next_update = null;
+			}
+		},
+		zoom:function(scale, duration) {
+			if(null === this.next_update && scale && duration && duration > 0) {
+				this.ttl = duration;
+				this.delta = (this.scale - scale) / duration;
+				
+				this.target = scale;
+				this.next_update = SceneManager._scene.updateChildren;
+				
+				SceneManager._scene.updateChildren = this.zoomUpdate;
 			}
 		}
 	};
@@ -194,6 +250,14 @@
 		Game_Map.prototype.tileRealHeight = function() {
 			return module.tileRealHeight;
 		};
+		
+		Game_Map.prototype.setTileRealWidth = function(w) {
+			module.tileRealWidth = w;
+		};
+		
+		Game_Map.prototype.setTileRealHeight = function(h) {
+			module.tileRealHeight = h;
+		};
 	}
 	
 	if(cmdName.length > 0) {
@@ -202,7 +266,14 @@
 
 		Game_Interpreter.prototype.pluginCommand = function(command, argv) {
 			if(cmdName === command) {
-				module.update(argv[0] || null);
+				switch(argv.length) {
+					case 1: {
+						module.update(Number(module.varg(argv[0]), null));
+					} break;
+					case 2: {
+						module.zoom(Number(module.varg(argv[0]), null), parseInt(module.varg(argv[1]), null));
+					} break;
+				}
 			} else {
 				Game_Interpreter_pluginCommand.call(this, command, argv);
 			}
@@ -211,6 +282,6 @@
 	
 	module.tileRealWidth  = module.uint('Tile Width',  48);
 	module.tileRealHeight = module.uint('Tile Height', 48);
-	module.update(module.real('Map Scale', null));
+	module.set_scale(module.real('Map Scale', null));
 	
 })();
