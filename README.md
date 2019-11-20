@@ -69,7 +69,12 @@ A very useful Developer Tools plugin.
 
 
 ### nyb_MapScale.js
-A simple plug-in to magnify the size of the map without affecting parallaxing or GUIs. Works well with 
+A simple plug-in to scale the size of the map without affecting parallaxing or GUIs.
+Command Syntax:
+  *mapscale <S> [F]*
+S -- Scale. Real numbers >= 1.0
+F -- Duration (in frames). This parameter is optional.
+If an integer parameter is prefixed with a $ then the value of the specified Variable is used as the parameter.
 
 
 ### nyb_MouseCommand.js
