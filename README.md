@@ -38,9 +38,9 @@ This very useful plugin mostly deals with the Game Window and Default Settings.
 
 ### nyb_Commands.js
 Adds the following Plugin Commands:
-`comevt` -- Allows a Map Event to call a Common Event as if the event were inside the Calling Map Event.
-`mapevt` -- Allows Map Events to call another Map Event as if the Calling Map Event contained the Event Commands.
-`scene` --  Allows telling the Scene Manager to push/pop/goto the specified scene.
+* `comevt` -- Allows a Map Event to call a Common Event as if the event were inside the Calling Map Event.
+* `mapevt` -- Allows Map Events to call another Map Event as if the Calling Map Event contained the Event Commands.
+* `scene` --  Allows telling the Scene Manager to push/pop/goto the specified scene.
 
 This very useful plugin allows for common Event Commands to be executed by different events.
 Just make sure the common Event Commands refer to 'This Event' when the Calling Map Event is the one needing to do something.
@@ -70,12 +70,13 @@ A very useful Developer Tools plugin.
 
 ### nyb_MapScale.js
 A simple plug-in to scale the size of the map without affecting parallaxing or GUIs.
+```
 Command Syntax:
-  *mapscale <S> [F]*
+mapscale S F
 S -- Scale. Real numbers >= 1.0
 F -- Duration (in frames). This parameter is optional.
 If an integer parameter is prefixed with a $ then the value of the specified Variable is used as the parameter.
-
+```
 
 ### nyb_MouseCommand.js
 * Provides automatic hiding of the mouse after being idle for a specified amount of time.
