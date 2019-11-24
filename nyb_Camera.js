@@ -1,12 +1,15 @@
 /* nyb_Camera.js
- * Version: 20191123c
+ * Version: 20191124a
 */
 /*:
  * @plugindesc Camera Controls
  * @author MrNybbles
  *
- * @help [Description] 
- *  
+ * @help [Description]
+ *  'Encounter Effect Patch' can be disabled to provide comparability for
+ *  another plugins replacing Scene_Map.prototype.updateEncounterEffect().
+ *
+ *
  * [Command Syntax]
  *  camera move S
  *  camera move S D
@@ -81,6 +84,12 @@
  * @desc    Scale to use then the game first begins. May be a real or integer number.
  * Default: 1.0
  * @default 1.0
+ *
+ * @param   Encounter Effect Patch
+ * @type    boolean
+ * @desc    Replaces Scene_Map.updateEncounterEffect to look better while zoomed.
+ * Default: true
+ * @default true
 */
 'use strict';
 
@@ -198,7 +207,7 @@
 					case 'Game_Event':
 					case 'Game_Follower':
 					case 'Game_Vehicle': {
-						console.info('Event Hooked');
+//						console.info('Event Hooked');
 						this.next_event_movement = this.target.updateMove;
 						this.target.updateMove = this.event_update_movement.bind(this.target);
 					} break;
@@ -209,11 +218,19 @@
 		},
 		apply_scale:function() {
 			if(null != $gameScreen) {
-				$gameScreen._zoomScale = this.on_map ? this.scale : 1.0;
+				if(this.on_map) {
+					$gameScreen._zoomScale = this.scale;
+					if(SceneManager._scene._spriteset) {
+						SceneManager._scene._spriteset._pictureContainer.scale.x = camera.coefficient;
+						SceneManager._scene._spriteset._pictureContainer.scale.y = camera.coefficient;
+					}
+				} else {
+					$gameScreen._zoomScale = 1.0;
+				}
 			}
 		},
 		set_target:function(obj) {
-			console.info(obj);
+//			console.info(obj);
 			if(obj && obj !== this.target) {
 				if(this.is_locked) {
 					this.unlock();
@@ -361,6 +378,55 @@
 	const Scene_Map_create      = Scene_Map.prototype.create;
 	const Scene_Battle_start    = Scene_Battle.prototype.start;
 	
+	Scene_Map.prototype.create = function() {
+		Scene_Map_create.call(this);
+		camera.init();
+		
+		Scene_Map.prototype.create = Scene_Map_create;
+	};
+	
+	Scene_Map.prototype.start = function() {
+		Scene_Map_start.call(this);
+		camera.set_mode(true);
+	};
+	
+	if(camera.bool('Encounter Effect Patch', true)) {
+		Scene_Map.prototype.updateEncounterEffect = function() {
+			if (this._encounterEffectDuration > 0) {
+				this._encounterEffectDuration--;
+				
+				const speed = this.encounterEffectSpeed();
+				const n = speed - this._encounterEffectDuration;
+				const p = n / speed;
+				const q = ((p - 1) * 20 * p + 5) * p + 1;
+				const zoomX = ($gamePlayer.screenX()*camera.coefficient);
+				const zoomY = ($gamePlayer.screenY()*camera.coefficient - 24);
+				
+				if (n === 2) {
+					$gameScreen.setZoom(zoomX, zoomY, camera.scale);
+					this.snapForBattleBackground();
+					this.startFlashForEncounter(speed / 2);
+				}
+				
+				$gameScreen.setZoom(zoomX, zoomY, q + camera.scale - 1);
+				
+				if (n === Math.floor(speed / 6)) {
+					this.startFlashForEncounter(speed / 2);
+				}
+				
+				if (n === Math.floor(speed / 2)) {
+					BattleManager.playBattleBgm();
+					this.startFadeOut(this.fadeSpeed());
+				}
+			}
+		};
+	}
+	
+	Scene_Battle.prototype.start = function() {
+		camera.set_mode(false);
+		Scene_Battle_start.call(this);
+	};
+	
 	Game_Screen.prototype.clearZoom = function() {
 		Game_Screen_clearZoom.call(this);
 		
@@ -506,22 +572,5 @@
 			}
 		};
 	}
-	
-	Scene_Map.prototype.create = function() {
-		Scene_Map_create.call(this);
-		camera.init();
-		
-		Scene_Map.prototype.create = Scene_Map_create;
-	};
-	
-	Scene_Map.prototype.start = function() {
-		Scene_Map_start.call(this);
-		camera.set_mode(true);
-	};
-	
-	Scene_Battle.prototype.start = function() {
-		camera.set_mode(false);
-		Scene_Battle_start.call(this);
-	};
 	
 })();
