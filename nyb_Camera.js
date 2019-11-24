@@ -1,5 +1,5 @@
 /* nyb_Camera.js
- * Version: 20191122d
+ * Version: 20191123c
 */
 /*:
  * @plugindesc Camera Controls
@@ -40,6 +40,7 @@
  *  Game_Map.prototype.scrollLeft(distance);
  *  Game_Map.prototype.scrollRight(distance);
  *  Game_Map.prototype.scrollUp(distance);
+ *  Game_Player.prototype.center();
  *  Game_Player.prototype.updateScroll(lastScrolledX, lastScrolledY);
  *
  * [Function Hooks]
@@ -87,12 +88,14 @@
 	
 	const camera = {
 		plugin_name:'nyb_Camera',
+		on_map:true,
 		is_bound:true,
+		is_locked:false,
 		scale:1.0,
 		coefficient:1.0,
 		ttl:0,
 		target:null,
-		next_event_update:null,
+		next_event_movement:null,
 		next_scene_update:null,
 //		queue:[],// Date().now()
 		nop:function() {
@@ -125,6 +128,11 @@
 			const value = Number(PluginManager.parameters(this.plugin_name)[name]);
 			return !isNaN(value) ? value : def;
 		},
+		vstring:function(arg, def) {
+			return	(arg && '$' === arg.charAt(0)) ?
+					($gameVariables._data[arg.slice(1)]) :
+					(arg || def);
+		},
 		vsint:function(arg, def) {
 			return	(arg && '$' === arg.charAt(0)) ?
 					(parseInt($gameVariables._data[arg.slice(1)]) || 0) :
@@ -148,6 +156,91 @@
 			const value = PluginManager.parameters(this.plugin_name)[name];
 			return value ? eval(value) : def;
 		},
+		update_scroll:function(x1, y1) {
+			const x2 = this.scrolledX();
+			const y2 = this.scrolledY();
+
+			if (y2 > y1 && y2 > this.centerY() * camera.coefficient) {
+				$gameMap.scrollDown(y2 - y1);
+			}
+			if (x2 < x1 && x2 < this.centerX() * camera.coefficient) {
+				$gameMap.scrollLeft(x1 - x2);
+			}
+			if (x2 > x1 && x2 > this.centerX() * camera.coefficient) {
+				$gameMap.scrollRight(x2 - x1);
+			}
+			if (y2 < y1 && y2 < this.centerY() * camera.coefficient) {
+				$gameMap.scrollUp(y1 - y2);
+			}
+		},
+		event_update_movement:function() {
+			camera.next_event_movement.call(this);
+			this.center(this._realX, this._realY);
+//			camera.update_scroll.call(this, this.scrolledX(), this.scrolledY());
+		},
+		unlock:function() {
+			if(this.is_locked) {
+				if(this.is_player(this.target)) {
+					this.target.updateScroll = this.nop;
+				} else {
+					this.target.updateMove = this.next_event_movement;
+				}
+				this.is_locked = false;
+			}
+		},
+		lock:function() {
+			if(!this.is_locked && this.target) {
+				switch(this.target.constructor.name) {
+					case 'Game_Player': {
+						this.next_event_update   = this.nop;
+						this.target.updateScroll = this.update_scroll;
+					} break;
+					case 'Game_Event':
+					case 'Game_Follower':
+					case 'Game_Vehicle': {
+						console.info('Event Hooked');
+						this.next_event_movement = this.target.updateMove;
+						this.target.updateMove = this.event_update_movement.bind(this.target);
+					} break;
+				}
+				
+				this.is_locked = true;
+			}
+		},
+		apply_scale:function() {
+			if(null != $gameScreen) {
+				$gameScreen._zoomScale = this.on_map ? this.scale : 1.0;
+			}
+		},
+		set_target:function(obj) {
+			console.info(obj);
+			if(obj && obj !== this.target) {
+				if(this.is_locked) {
+					this.unlock();
+					this.target = obj;
+					this.lock();
+				} else {
+					this.target = obj;
+				}
+			}
+		},
+		set_scale:function(scale) {
+			if(!isNaN(scale)) {
+				this.scale       = scale;
+				this.coefficient = 1.0 / scale;
+				
+				this.apply_scale();
+			}
+		},
+		set_mode:function(on_map) {
+			this.on_map = on_map;
+			this.apply_scale();
+		},
+		init:function() {
+			this.set_scale(camera.real('Initial Scale', 1.0));
+			this.set_target($gamePlayer);
+			this.lock($gamePlayer);
+		},
 		is_player:function(obj) {
 			return ('Game_Player' === obj.constructor.name);
 		},
@@ -162,16 +255,6 @@
 		},
 		is_targetable:function(obj) {
 			return this.is_player(obj) || is_event(obj) || is_follower(obj) || is_vehicle(obj);
-		},
-		set_scale:function(scale) {
-			if(!isNaN(scale)) {
-				this.scale       = scale;
-				this.coefficient = 1.0 / scale;
-				
-				if($gameScreen) {
-					$gameScreen._zoomScale = scale;
-				}
-			}
 		},
 		scrollX:function() {
 			if(this.dx > 0) {
@@ -200,55 +283,6 @@
 				camera.set_scale(camera.tz);
 				SceneManager._scene.updateChildren = camera.next_scene_update;
 				camera.next_scene_update = null;
-			}
-		},
-		update_scroll:function(x1, y1) {
-			const x2 = this.scrolledX();
-			const y2 = this.scrolledY();
-			
-			if (y2 > y1 && y2 > this.centerY() * camera.coefficient) {
-				$gameMap.scrollDown(y2 - y1);
-			}
-			if (x2 < x1 && x2 < this.centerX() * camera.coefficient) {
-				$gameMap.scrollLeft(x1 - x2);
-			}
-			if (x2 > x1 && x2 > this.centerX() * camera.coefficient) {
-				$gameMap.scrollRight(x2 - x1);
-			}
-			if (y2 < y1 && y2 < this.centerY() * camera.coefficient) {
-				$gameMap.scrollUp(y1 - y2);
-			}
-		},
-		event_update_scroll:function() {
-			this.next_event_update.apply(this, arguments);
-			this.update_scroll.call(this, this.scrolledX(), this.scrolledY());
-		},
-		unlock:function() {
-			if(this.target) {
-				this.target.updateScroll = this.next_event_update;
-			}
-		},
-		lock:function() {
-			if(this.target) {
-				this.unlock();
-				switch(this.target.constructor.name) {
-					case 'Game_Player': {
-						this.next_event_update = this.nop;
-						this.target.updateScroll       = this.update_scroll;
-						
-					} break;
-					case 'Game_Event':
-					case 'Game_Follower':
-					case 'Game_Vehicle': {
-						this.next_event_update = this.target.updateScroll;
-						this.target.updateScroll       = this.event_update_scroll;
-					} break;
-				}
-			}
-		},
-		set_target:function(obj) {
-			if(obj && obj !== this.target) {
-				this.target = obj;
 			}
 		},
 		do_move:function(x, y, scale, duration) {
@@ -302,16 +336,35 @@
 				} break;
 			}
 		},
+		cmd_event:function(argv) {
+			switch(argv.length) {
+				case 2: {
+					camera.set_target($gameMap.event(this.vuint(argv[1], 0)));
+				} break;
+				case 3: {
+					if(3 === argv.length && 'name' === argv[1]) {
+						const name = this.vstring(argv[2]);
+						const data = $dataMap.events().find((entry) => entry.name === name);
+						if(data) {
+							camera.set_target($gameMap.event(data.id));
+						}
+					}
+				} break;
+			}
+		},
 	};
 	
 	const cmdName = camera.string('Command Name', 'camera');
 	
-	const Game_Screen_clearZoom       = Game_Screen.prototype.clearZoom;
-	const Scene_Map_start             = Scene_Map.prototype.start;
+	const Game_Screen_clearZoom = Game_Screen.prototype.clearZoom;
+	const Scene_Map_start       = Scene_Map.prototype.start;
+	const Scene_Map_create      = Scene_Map.prototype.create;
+	const Scene_Battle_start    = Scene_Battle.prototype.start;
 	
 	Game_Screen.prototype.clearZoom = function() {
 		Game_Screen_clearZoom.call(this);
-		this._zoomScale = camera.scale;
+		
+		camera.apply_scale();
 	}
 	
 	Game_Map.prototype.screenTileX = function() {
@@ -320,6 +373,20 @@
 
 	Game_Map.prototype.screenTileY = function() {
 		return Graphics.height / $gameMap.tileHeight() * camera.coefficient;
+	};
+	
+	Game_Map.prototype.canvasToMapX = function(x) { // Translates mouse/touch input.
+		const tileWidth = this.tileWidth() * camera.scale;
+		const originX = (this._displayX * tileWidth);
+		const mapX = Math.floor(((originX + x) / tileWidth));
+		return this.roundX(mapX);
+	};
+
+	Game_Map.prototype.canvasToMapY = function(y) { // Translates mouse/touch input.
+		const tileHeight = this.tileHeight() * camera.scale;
+		const originY = (this._displayY * tileHeight);
+		const mapY = Math.floor(((originY + y) / tileHeight));
+		return this.roundY(mapY);
 	};
 	
 	Game_Map.prototype.scrollDown = function(distance) {
@@ -390,6 +457,14 @@
 			this._parallaxY += this._displayY - lastY;
 		}
 	};
+	
+	Game_Player.prototype.center = function(x, y) { // Centers Player when starting on map.
+		return $gameMap.setDisplayPos(this.x - this.centerX() * camera.coefficient, this.y - this.centerY() * camera.coefficient);
+	};
+	
+	Game_Character.prototype.centerX = Game_Player.prototype.centerX;
+	Game_Character.prototype.centerY = Game_Player.prototype.centerY;
+	Game_Character.prototype.center  = Game_Player.prototype.center;
 
 	Game_Player.prototype.updateScroll = camera.update_scroll;
 	
@@ -415,6 +490,12 @@
 					case 'unlock': {
 						camera.unlock();
 					} break;
+					case 'player': {
+						camera.set_target($gamePlayer);
+					} break;
+//					case 'event': {
+//						camera.cmd_event(argv);
+//					} break;
 					default: {
 						console.warning('Unknown ' + cmdName + ' sub-command' + argv[0] + '.');
 					} break;
@@ -426,11 +507,21 @@
 		};
 	}
 	
-	Scene_Map.prototype.start = function() {
-		Scene_Map_start.call(this);
-		camera.set_target($gamePlayer);
-		camera.lock($gamePlayer);
+	Scene_Map.prototype.create = function() {
+		Scene_Map_create.call(this);
+		camera.init();
+		
+		Scene_Map.prototype.create = Scene_Map_create;
 	};
 	
-	camera.set_scale(camera.real('Initial Scale', 1.0));
+	Scene_Map.prototype.start = function() {
+		Scene_Map_start.call(this);
+		camera.set_mode(true);
+	};
+	
+	Scene_Battle.prototype.start = function() {
+		camera.set_mode(false);
+		Scene_Battle_start.call(this);
+	};
+	
 })();
