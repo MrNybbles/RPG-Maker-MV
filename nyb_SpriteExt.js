@@ -1,5 +1,5 @@
 /* nyb_SpriteExt.js
- * Version: 20191126a
+ * Version: 20191127a
 */
 /*:
  * @plugindesc Customized Grid-based Sprites.
@@ -131,7 +131,7 @@
  * @decimals 0
  *
  * @param    wait
- * @text     Animation Wait Function
+ * @text     Animation Wait
  * @type     string
  * @desc     Returns the delay used before cycling to the next frame.
  * Default:  ((ch) => (9 - ch.realMoveSpeed()) * 3)
@@ -173,11 +173,19 @@
 	});
 	{
 		const Sprite_Character_characterBlockX = function() {
-			return this._character.characterIndex() % this._character._customSprite.xcells * this._character._customSprite.ycells;
+			if (this._isBigCharacter) {
+				return 0;
+			} else {
+				return this._character.characterIndex() % this._character._customSprite.ycells * this._character._customSprite.total;
+			}
 		};
 
 		const Sprite_Character_characterBlockY = function() {
-			return Math.floor(this._character.characterIndex() / this._character._customSprite.xcells) * this._character._customSprite.xcells;
+			if (this._isBigCharacter) {
+				return 0;
+			} else {
+				return ((this._character.characterIndex() / this._character._customSprite.ycells)<<0) * 4;
+			}
 		};
 
 		const Sprite_Character_characterPatternX = function() {
@@ -200,11 +208,23 @@
 		};
 
 		const Sprite_Character_patternWidth = function() {
-			return this.bitmap.width / this._character._customSprite.xcells;
+			if (this._tileId > 0) {
+				return $gameMap.tileWidth();
+			} else if (this._isBigCharacter) {
+				return (this.bitmap.width / this._character._customSprite.xcells);
+			} else {
+				return (this.bitmap.width / this._character._customSprite.xcells * 0.25);
+			}
 		};
 
 		const Sprite_Character_patternHeight = function() {
-			return this.bitmap.height / this._character._customSprite.ycells;
+			if (this._tileId > 0) {
+				return $gameMap.tileHeight();
+			} else if (this._isBigCharacter) {
+				return (this.bitmap.height / this._character._customSprite.ycells);
+			} else {
+				return (this.bitmap.height / this._character._customSprite.ycells * 0.5);
+			}
 		};
 		
 		const Game_Player_getInputDirection = function() {
@@ -265,10 +285,6 @@
 					this._pattern : this._customSprite.first;
 			}
 			
-			if("Game_Player" !== this.constructor.name) {
-				console.info(this._pattern);
-			}
-			
 			return this._customSprite.idle;
 		};
 		
@@ -293,7 +309,6 @@
 				this.characterBlockX    = Sprite_Character_characterBlockX;
 				this.characterBlockY    = Sprite_Character_characterBlockY;
 				this.characterPatternX  = Sprite_Character_characterPatternX;
-				this.characterPatternY  = Sprite_Character_characterPatternY;
 				this.patternWidth       = Sprite_Character_patternWidth;
 				this.patternHeight      = Sprite_Character_patternHeight;
 				
@@ -303,6 +318,7 @@
 				if(sprite.eight_way) {
 					character.getInputDirection  = Game_Player_getInputDirection;
 					if(8 === sprite.ycells) {
+						this.characterPatternY   = Sprite_Character_characterPatternY;
 						character.moveDiagonally = Game_CharacterBase_moveDiagonally8;
 					} else {
 						character.moveDiagonally = Game_CharacterBase_moveDiagonally4;
