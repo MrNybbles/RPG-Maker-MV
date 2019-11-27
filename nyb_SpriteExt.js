@@ -1,5 +1,5 @@
 /* nyb_SpriteExt.js
- * Version: 20191127a
+ * Version: 20191127b
 */
 /*:
  * @plugindesc Customized Grid-based Sprites.
@@ -280,9 +280,16 @@
 		};
 		
 		const Game_CharacterBase_pattern = function() {
-			if(this.isMoving() || this._moveFrequency >= 5 || ("Game_Player" === this.constructor.name && 0 !== this.getInputDirection())) {
-				return (this._pattern < this.maxPattern()) && (this._pattern >= this._customSprite.first) ?
-					this._pattern : this._customSprite.first;
+			if("Game_Player" === this.constructor.name) {
+				if(this.isMoving() || 0 !== this.getInputDirection()) {
+					return (this._pattern < this.maxPattern()) && (this._pattern >= this._customSprite.first) ?
+						this._pattern : this._customSprite.first;
+				}
+			} else {
+				if(this.isMoving() || this._moveFrequency >= 5) {
+					return (this._pattern < this.maxPattern()) && (this._pattern >= this._customSprite.first) ?
+						this._pattern : this._customSprite.first;
+				}
 			}
 			
 			return this._customSprite.idle;
