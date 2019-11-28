@@ -1,5 +1,5 @@
 /* nyb_SpriteExt.js
- * Version: 20191127c
+ * Version: 20191127d
 */
 /*:
  * @plugindesc Customized Grid-based Sprites.
@@ -136,7 +136,6 @@
  * @desc     Returns the delay used before cycling to the next frame.
  * Default:  ((ch) => (9 - ch.realMoveSpeed()) * 3)
  * @default  ((ch) => (9 - ch.realMoveSpeed()) * 3)
-
 */
 'use strict';
 
@@ -295,7 +294,7 @@
 			return this._customSprite.idle;
 		};
 		
-		Game_CharacterBase_isOriginalPattern = function() {
+		const Game_CharacterBase_isOriginalPattern = function() {
 			return this.pattern() === this._customSprite.idle;
 		};
 		
