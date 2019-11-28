@@ -1,5 +1,5 @@
 /* nyb_SpriteExt.js
- * Version: 20191127b
+ * Version: 20191127c
 */
 /*:
  * @plugindesc Customized Grid-based Sprites.
@@ -295,6 +295,10 @@
 			return this._customSprite.idle;
 		};
 		
+		Game_CharacterBase_isOriginalPattern = function() {
+			return this.pattern() === this._customSprite.idle;
+		};
+		
 		const Game_CharacterBase_resetPattern = function() {
 			this.setPattern(this._customSprite.first);
 		};
@@ -332,12 +336,13 @@
 					}
 				}
 				
-				character.shiftY        = Game_CharacterBase_shiftY;
-				character.straighten    = Game_CharacterBase_straighten;
-				character.maxPattern    = Game_CharacterBase_maxPattern;
-				character.pattern       = Game_CharacterBase_pattern;
-				character.resetPattern  = Game_CharacterBase_resetPattern;
-				character.animationWait = Game_CharacterBase_animationWait;
+				character.shiftY            = Game_CharacterBase_shiftY;
+				character.straighten        = Game_CharacterBase_straighten;
+				character.maxPattern        = Game_CharacterBase_maxPattern;
+				character.pattern           = Game_CharacterBase_pattern;
+				character.isOriginalPattern = Game_CharacterBase_isOriginalPattern;
+				character.resetPattern      = Game_CharacterBase_resetPattern;
+				character.animationWait     = Game_CharacterBase_animationWait;
 			}
 		}
 	}
