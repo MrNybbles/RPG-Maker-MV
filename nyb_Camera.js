@@ -1,54 +1,32 @@
-/* nyb_Camera.js
- * Version: 20191127c
+/* nyb_SpriteExt.js
+ * Version: 20191127d
 */
 /*:
- * @plugindesc Camera Controls
+ * @plugindesc Customized Grid-based Sprites.
  * @author MrNybbles
  *
  * @help [Description]
- *  'Encounter Effect Patch' can be disabled to provide comparability for
- *  another plugins replacing Scene_Map.prototype.updateEncounterEffect().
+ *  Applies custom Sprite animation based on filename suffix to both
+ *  Events and the Player.
  *
+ * _______RpgMV_CPACK *
+ * Row   |  3  |  9
+ * Col   |  4  |  8
+ * Idle  |  1  |  0
+ * First |  0  |  1
+ * Total |  3  |  8
+ * Shift |  6  |  0
  *
- * [Command Syntax]
- *  camera move S
- *  camera move S D
- *  camera move X Y D
- *  camera move X Y S D
- *   Moves the camera by the X Y Offset to Scale S over Duration D.
+ * RpgMV -- ((ch) => (9 - ch.realMoveSpeed()) * 3)
+ * CPACK -- ((ch) => (9 - ch.realMoveSpeed()))
  *
- *  camera bind
- *   Camera is limited to the map's boundaries. This is the normal behavior
- *   of the game's camera.
+ * * RpgMV -- RPG Maker MV default character sprites.
+ *   CPACK -- Customizable Pixel Art Character Kit.
  *
- *  camera unbind
- *   Camera is not affected by the map's boundaries. This keeps the target
- *   at the center at all times when moving around the map.
- *
- *  camera lock
- *   Camera will now move then the target moves.
- *
- *  camera unlock
- *   Camera will not follow the target.
- *
- *  S  - Scale
- *  D  - Duration (in frames)
- *  X  - X Location (in tiles)
- *  Y  - Y Location (in tiles)
- *
- * [Function Overrides]
- *  Game_Map.prototype.screenTileX();
- *  Game_Map.prototype.screenTileY();
- *  Game_Map.prototype.scrollDown(distance);
- *  Game_Map.prototype.scrollLeft(distance);
- *  Game_Map.prototype.scrollRight(distance);
- *  Game_Map.prototype.scrollUp(distance);
- *  Game_Player.prototype.center();
- *  Game_Player.prototype.updateScroll(lastScrolledX, lastScrolledY);
- *
- * [Function Hooks]
- *  Game_Screen.prototype.clearZoom();
- *  Scene_Map.prototype.start();
+ * [Notes]
+ *  Rows are the number of animation frames in the sequence.
+ *  Cols are the number of animation sequences.
+ *  You can add as many custom animation sequences as you want.
  *
  * [License]
  *  MIT https://opensource.org/licenses/MIT
@@ -73,42 +51,99 @@
  *  TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  *  SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
- * @param   Command Name
- * @type    string
- * @desc    Plugin Command name to use in Event Commands. Leave blank to disable.
- * Default: camera
- * @default camera
+ * @param   Sprites
+ * @type    struct<Sprite>[]
+ * @desc    Animation sequences
+*/
+/*~struct~Sprite:
+ * @param    suffix
+ * @text     Sprite Filename Suffix
+ * @type     string
+ * @desc     Only apply this Animation to files with this suffix.
+ *           Leave blank to apply to all files.
+ * @default
  *
- * @param   Initial Scale
- * @type    string
- * @desc    Scale to use then the game first begins. May be a real or integer number.
- * Default: 1.0
- * @default 1.0
+ * @param    eight_way
+ * @text     Enable 8-Way Movement
+ * @type     boolean
+ * @desc     Enable moving the player character in 8 directions.
+ * Default:  false
+ * @default  false
  *
- * @param   Encounter Effect Patch
- * @type    boolean
- * @desc    Replaces Scene_Map.updateEncounterEffect to look better while zoomed.
- * Default: true
- * @default true
+ * @param    xcells
+ * @text     Cells per Row
+ * @type     number
+ * @desc     Number of Sprite cells per row.
+ * Default:  3
+ * @default  3
+ * @min      0
+ * @max      2147483647
+ * @decimals 0
+ *
+ * @param    ycells
+ * @text     Cells per Column
+ * @type     number
+ * @desc     Number of Sprite cells per column. Must be 4 or 8.
+ * Default:  4
+ * @default  4
+ * @min      0
+ * @max      2147483647
+ * @decimals 0
+ *
+ * @param    idle
+ * @text     Idle Frame Index
+ * @type     number
+ * @desc     The frame index used when not moving.
+ * Default:  1
+ * @default  1
+ * @min      0
+ * @max      2147483647
+ * @decimals 0
+ *
+ * @param    first
+ * @text     Start Sequence Frame
+ * @type     number
+ * @desc     The first frame index of each movement sequence.
+ * Default:  0
+ * @default  0
+ * @min      0
+ * @max      2147483647
+ * @decimals 0
+ *
+ * @param    total
+ * @text     Sequence Frames
+ * @type     number
+ * @desc     The total number of frames in a sequence.
+ * Default:  3
+ * @default  3
+ * @min      0
+ * @max      2147483647
+ * @decimals 0
+ *
+ * @param    shiftY
+ * @text     Shift Y
+ * @type     number
+ * @desc     How far up to shift the sprite relative to the tile.
+ * Default:  6
+ * @default  6
+ * @min     -2147483648
+ * @max      2147483647
+ * @decimals 0
+ *
+ * @param    wait
+ * @text     Animation Wait
+ * @type     string
+ * @desc     Returns the delay used before cycling to the next frame.
+ * Default:  ((ch) => (9 - ch.realMoveSpeed()) * 3)
+ * @default  ((ch) => (9 - ch.realMoveSpeed()) * 3)
+
 */
 'use strict';
 
 (function() {
 	
-	const camera = {
-		plugin_name:'nyb_Camera',
-		on_map:true,
-		is_bound:true,
-		is_locked:false,
-		scale:1.0,
-		coefficient:1.0,
-		ttl:0,
-		target:null,
-		next_event_movement:null,
-		next_scene_update:null,
-//		queue:[],// Date().now()
-		nop:function() {
-		},
+	const module = {
+		plugin_name:'nyb_SpriteExt',
 		sint_clamp:function(value, def) {
 			return !isNaN(value) ? value <= 2147483647 ? value >= -2147483648 ?
 			(value<<0): -2147483648 : 2147483647 : def;
@@ -117,467 +152,198 @@
 			return !isNaN(value) ? value <= 2147483647 ? value >= 0 ?
 			(value<<0) : 0 : 2147483647 : def;
 		},
-		string:function(name, def) {
-			const value = PluginManager.parameters(this.plugin_name)[name];
-			return value ? value : def;
-		},
-		bool:function(name, def) {
-			const value = PluginManager.parameters(this.plugin_name)[name];
-			return value ? 'true' === value : def;
-		},
-		uint:function(name, def) {
-			const value = parseInt(PluginManager.parameters(this.plugin_name)[name]);
-			return !isNaN(value) ? Math.max(0, value) : def;
-		},
-		sint:function(name, def) {
-			const value = parseInt(PluginManager.parameters(this.plugin_name)[name]);
-			return !isNaN(value) ? value : def;
-		},
-		real:function(name, def) {
-			const value = Number(PluginManager.parameters(this.plugin_name)[name]);
-			return !isNaN(value) ? value : def;
-		},
-		vstring:function(arg, def) {
-			return	(arg && '$' === arg.charAt(0)) ?
-					($gameVariables._data[arg.slice(1)]) :
-					(arg || def);
-		},
-		vsint:function(arg, def) {
-			return	(arg && '$' === arg.charAt(0)) ?
-					(parseInt($gameVariables._data[arg.slice(1)]) || 0) :
-					(parseInt(arg, 10) || def);
-		},
-		vuint:function(arg, def) {
-			return	(arg && '$' === arg.charAt(0)) ?
-					(parseInt($gameVariables._data[arg.slice(1)]) || 0) :
-					(parseInt(arg, 10).clamp(0, 2147483648) || def);
-		},
-		vreal:function(arg, def) {
-			return	(arg && '$' === arg.charAt(0)) ?
-					(Number($gameVariables._data[arg.slice(1)]) || 0) :
-					(Number(arg) || def);
-		},
 		json:function(name, def) {
 			const value = PluginManager.parameters(this.plugin_name)[name];
 			return value ? JSON.parse(value) : def;
-		},
-		eval:function(name, def) {
-			const value = PluginManager.parameters(this.plugin_name)[name];
-			return value ? eval(value) : def;
-		},
-		update_scroll:function(x1, y1) {
-			const x2 = this.scrolledX();
-			const y2 = this.scrolledY();
+		}
+	};
+	
+	const sprites = module.json('Sprites', null) || [];
 
-			if (y2 > y1 && y2 > this.centerY() * camera.coefficient) {
-				$gameMap.scrollDown(y2 - y1);
-			}
-			if (x2 < x1 && x2 < this.centerX() * camera.coefficient) {
-				$gameMap.scrollLeft(x1 - x2);
-			}
-			if (x2 > x1 && x2 > this.centerX() * camera.coefficient) {
-				$gameMap.scrollRight(x2 - x1);
-			}
-			if (y2 < y1 && y2 < this.centerY() * camera.coefficient) {
-				$gameMap.scrollUp(y1 - y2);
-			}
-		},
-		event_update_movement:function() {
-			camera.next_event_movement.call(this);
-			this.center(this._realX, this._realY);
-//			camera.update_scroll.call(this, this.scrolledX(), this.scrolledY());
-		},
-		unlock:function() {
-			if(this.is_locked) {
-				if(this.is_player(this.target)) {
-					this.target.updateScroll = this.nop;
-				} else {
-					this.target.updateMove = this.next_event_movement;
-				}
-				this.is_locked = false;
-			}
-		},
-		lock:function() {
-			if(!this.is_locked && this.target) {
-				switch(this.target.constructor.name) {
-					case 'Game_Player': {
-						this.next_event_update   = this.nop;
-						this.target.updateScroll = this.update_scroll;
-					} break;
-					case 'Game_Event':
-					case 'Game_Follower':
-					case 'Game_Vehicle': {
-//						console.info('Event Hooked');
-						this.next_event_movement = this.target.updateMove;
-						this.target.updateMove = this.event_update_movement.bind(this.target);
-					} break;
-				}
-				
-				this.is_locked = true;
-			}
-		},
-		apply_scale:function() {
-			if(null != $gameScreen) {
-				if(this.on_map) {
-					$gameScreen._zoomScale = this.scale;
-					if(SceneManager._scene._spriteset) {
-						SceneManager._scene._spriteset._pictureContainer.scale.x = camera.coefficient;
-						SceneManager._scene._spriteset._pictureContainer.scale.y = camera.coefficient;
-					}
-				} else {
-					$gameScreen._zoomScale = 1.0;
-				}
-			}
-		},
-		set_target:function(obj) {
-//			console.info(obj);
-			if(obj && obj !== this.target) {
-				if(this.is_locked) {
-					this.unlock();
-					this.target = obj;
-					this.lock();
-				} else {
-					this.target = obj;
-				}
-			}
-		},
-		set_scale:function(scale) {
-			if(!isNaN(scale)) {
-				this.scale       = scale;
-				this.coefficient = 1.0 / scale;
-				
-				this.apply_scale();
-			}
-		},
-		set_mode:function(on_map) {
-			this.on_map = on_map;
-			this.apply_scale();
-		},
-		init:function() {
-			this.set_scale(camera.real('Initial Scale', 1.0));
-			this.set_target($gamePlayer);
-			this.lock($gamePlayer);
-		},
-		is_player:function(obj) {
-			return ('Game_Player' === obj.constructor.name);
-		},
-		is_event:function(obj) {
-			return ('Game_Event' === obj.constructor.name);
-		},
-		is_follower:function(obj) {
-			return ('Game_Follower' === obj.constructor.name);
-		},
-		is_vehicle:function(obj) {
-			return ('Game_Vehicle' === obj.constructor.name);
-		},
-		is_targetable:function(obj) {
-			return this.is_player(obj) || is_event(obj) || is_follower(obj) || is_vehicle(obj);
-		},
-		scrollX:function() {
-			if(this.dx > 0) {
-				$gameMap.scrollRight(this.dx);
+	sprites.forEach(function(sprite, idx, arr) {
+		const tmp  = JSON.parse(sprite);
+		tmp.wait   = eval(tmp.wait);
+		tmp.first  = module.uint_clamp(tmp.first,  0);
+		tmp.total  = module.uint_clamp(tmp.total,  3);
+		tmp.idle   = module.uint_clamp(tmp.idle,   1);
+		tmp.xcells = module.uint_clamp(tmp.xcells, 3);
+		tmp.ycells = module.uint_clamp(tmp.ycells, 4);
+		tmp.shiftY = module.sint_clamp(tmp.shiftY, 6);
+		arr[idx]   = tmp;
+	});
+	{
+		const Sprite_Character_characterBlockX = function() {
+			if (this._isBigCharacter) {
+				return 0;
 			} else {
-				$gameMap.scrollLeft(-this.dx);
-			}
-		},
-		scrollY:function() {
-			if(this.dy > 0) {
-				$gameMap.scrollDown(this.dy);
-			} else {
-				$gameMap.scrollUp(-this.dy);
-			}
-		},
-		update_position:function() {
-			if(camera.next_scene_update) {
-				camera.next_scene_update.call(this);
-			}
-			if(camera.ttl > 0) {
-				camera.ttl--;
-				camera.scrollX();
-				camera.scrollY();
-				camera.set_scale(camera.scale - camera.dz);
-			} else {
-				camera.set_scale(camera.tz);
-				SceneManager._scene.updateChildren = camera.next_scene_update;
-				camera.next_scene_update = null;
-			}
-		},
-		center_scaled_x:function(coefficient) {
-			return ((Graphics.width * camera.coefficient - Graphics.width * coefficient)/$gameMap.tileWidth())>>1;
-		},
-		center_scaled_y:function(coefficient) {
-			return ((Graphics.height * camera.coefficient - Graphics.height * coefficient)/$gameMap.tileHeight())>>1;
-		},
-		do_move:function(x, y, scale, duration) {
-			if(null === this.next_scene_update && !isNaN(x) && !isNaN(y) && !isNaN(scale) && !isNaN(duration) && --duration > 0) {
-				const coefficient = 1.0/scale;
-				this.ttl = duration;
-				this.tx  = x;
-				this.dx  = (x + this.center_scaled_x(coefficient)) / duration;
-				this.ty  = y;
-				this.dy  = (y + this.center_scaled_y(coefficient)) / duration;
-				this.tz  = scale;
-				this.dz  = (this.scale - scale) / duration;
-				this.next_scene_update = SceneManager._scene.updateChildren;
-				
-				SceneManager._scene.updateChildren = this.update_position;
-			}
-		},
-		cmd_move:function(argv) {
-//			console.info(argv);
-			switch(argv.length) {
-				case 2: { // move S
-					this.do_move(
-						0,
-						0,
-						this.scale,
-						1
-					);
-				} break;
-				case 3: { // move S D
-					this.do_move(
-						0,
-						0,
-						this.vreal(argv[1], null),
-						this.vuint(argv[2], null)
-					);
-				} break;
-				case 4: { // move X Y D
-					this.do_move(
-						this.vreal(argv[1], null),
-						this.vreal(argv[2], null),
-						this.scale,
-						this.vuint(argv[3], null)
-					);
-				} break;
-				case 5: { // move X Y S D
-					this.do_move(
-						this.vreal(argv[1], null),
-						this.vreal(argv[2], null),
-						this.vreal(argv[3], null),
-						this.vuint(argv[4], null)
-					);
-				} break;
-			}
-		},
-		cmd_event:function(argv) {
-			switch(argv.length) {
-				case 2: {
-					camera.set_target($gameMap.event(this.vuint(argv[1], 0)));
-				} break;
-				case 3: {
-					if(3 === argv.length && 'name' === argv[1]) {
-						const name = this.vstring(argv[2]);
-						const data = $dataMap.events().find((entry) => entry.name === name);
-						if(data) {
-							camera.set_target($gameMap.event(data.id));
-						}
-					}
-				} break;
-			}
-		},
-	};
-	
-	const cmdName = camera.string('Command Name', 'camera');
-	
-	const Game_Screen_clearZoom = Game_Screen.prototype.clearZoom;
-	const Scene_Map_start       = Scene_Map.prototype.start;
-	const Scene_Map_create      = Scene_Map.prototype.create;
-	const Scene_Battle_start    = Scene_Battle.prototype.start;
-	
-	Scene_Map.prototype.create = function() {
-		Scene_Map_create.call(this);
-		camera.init();
-		
-		Scene_Map.prototype.create = Scene_Map_create;
-	};
-	
-	Scene_Map.prototype.start = function() {
-		Scene_Map_start.call(this);
-		camera.set_mode(true);
-	};
-	
-	if(camera.bool('Encounter Effect Patch', true)) {
-		Scene_Map.prototype.updateEncounterEffect = function() {
-			if (this._encounterEffectDuration > 0) {
-				this._encounterEffectDuration--;
-				
-				const speed = this.encounterEffectSpeed();
-				const n = speed - this._encounterEffectDuration;
-				const p = n / speed;
-				const q = ((p - 1) * 20 * p + 5) * p + 1;
-				const zoomX = ($gamePlayer.screenX()*camera.coefficient);
-				const zoomY = ($gamePlayer.screenY()*camera.coefficient - 24);
-				
-				if (n === 2) {
-					$gameScreen.setZoom(zoomX, zoomY, camera.scale);
-					this.snapForBattleBackground();
-					this.startFlashForEncounter(speed / 2);
-				}
-				
-				$gameScreen.setZoom(zoomX, zoomY, q + camera.scale - 1);
-				
-				if (n === Math.floor(speed / 6)) {
-					this.startFlashForEncounter(speed / 2);
-				}
-				
-				if (n === Math.floor(speed / 2)) {
-					BattleManager.playBattleBgm();
-					this.startFadeOut(this.fadeSpeed());
-				}
+				return this._character.characterIndex() % this._character._customSprite.ycells * this._character._customSprite.total;
 			}
 		};
-	}
-	
-	Scene_Battle.prototype.start = function() {
-		camera.set_mode(false);
-		Scene_Battle_start.call(this);
-	};
-	
-	Game_Screen.prototype.clearZoom = function() {
-		Game_Screen_clearZoom.call(this);
+
+		const Sprite_Character_characterBlockY = function() {
+			if (this._isBigCharacter) {
+				return 0;
+			} else {
+				return ((this._character.characterIndex() / this._character._customSprite.ycells)<<0) * 4;
+			}
+		};
+
+		const Sprite_Character_characterPatternX = function() {
+			return this._character.pattern();
+		};
+
+		const Sprite_Character_characterPatternY = function() {
+			switch(this._character.direction()) {
+				case 1:  return 1;
+				case 2:  return 0;
+				case 3:  return 7;
+				case 4:  return 2;
+				case 5:  return 0;
+				case 6:  return 6;
+				case 7:  return 3;
+				case 8:  return 4;
+				case 9:  return 5;
+				default: return 0;
+			}
+		};
+
+		const Sprite_Character_patternWidth = function() {
+			if (this._tileId > 0) {
+				return $gameMap.tileWidth();
+			} else if (this._isBigCharacter) {
+				return (this.bitmap.width / this._character._customSprite.xcells);
+			} else {
+				return (this.bitmap.width / this._character._customSprite.xcells * 0.25);
+			}
+		};
+
+		const Sprite_Character_patternHeight = function() {
+			if (this._tileId > 0) {
+				return $gameMap.tileHeight();
+			} else if (this._isBigCharacter) {
+				return (this.bitmap.height / this._character._customSprite.ycells);
+			} else {
+				return (this.bitmap.height / this._character._customSprite.ycells * 0.5);
+			}
+		};
 		
-		camera.apply_scale();
-	}
-	
-	Game_Map.prototype.screenTileX = function() {
-		return Graphics.width / $gameMap.tileWidth() * camera.coefficient;
-	};
-
-	Game_Map.prototype.screenTileY = function() {
-		return Graphics.height / $gameMap.tileHeight() * camera.coefficient;
-	};
-	
-	Game_Map.prototype.canvasToMapX = function(x) { // Translates mouse/touch input.
-		const tileWidth = this.tileWidth() * camera.scale;
-		const originX = (this._displayX * tileWidth);
-		const mapX = Math.floor(((originX + x) / tileWidth));
-		return this.roundX(mapX);
-	};
-
-	Game_Map.prototype.canvasToMapY = function(y) { // Translates mouse/touch input.
-		const tileHeight = this.tileHeight() * camera.scale;
-		const originY = (this._displayY * tileHeight);
-		const mapY = Math.floor(((originY + y) / tileHeight));
-		return this.roundY(mapY);
-	};
-	
-	Game_Map.prototype.scrollDown = function(distance) {
-		if (this.isLoopVertical()) {
-			this._displayY += distance;
-			this._displayY %= $dataMap.height;
-			if (this._parallaxLoopY) {
-				this._parallaxY += distance;
+		const Game_Player_getInputDirection = function() {
+			return Input.dir8;
+		};
+		
+		const Game_Player_executeMove = function(direction) {
+			if(!(direction & 1)) {
+				this.moveStraight(direction);
+			} else {
+				this.moveDiagonally(direction);
 			}
-		} else if (this.height()  >= this.screenTileY()) {
-			const lastY = this._displayY;
-			this._displayY = camera.is_bound ?
-				(Math.min(this._displayY + distance, this.height() - this.screenTileY())) :
-				(this._displayY + distance)
-			;
-			this._parallaxY += this._displayY - lastY;
-		}
-	};
-
-	Game_Map.prototype.scrollLeft = function(distance) {
-		if (this.isLoopHorizontal()) {
-			this._displayX += $dataMap.width - distance;
-			this._displayX %= $dataMap.width;
-			if (this._parallaxLoopX) {
-				this._parallaxX -= distance;
-			}
-		} else if (this.width() >= this.screenTileX()) {
-			const lastX = this._displayX;
-			this._displayX = camera.is_bound ?
-				(Math.max(this._displayX - distance, 0)) :
-				(this._displayX - distance)
-			;
-			this._parallaxX += this._displayX - lastX;
-		}
-	};
-
-	Game_Map.prototype.scrollRight = function(distance) {
-		if (this.isLoopHorizontal()) {
-			this._displayX += distance;
-			this._displayX %= $dataMap.width;
-			if (this._parallaxLoopX) {
-				this._parallaxX += distance;
-			}
-		} else if (this.width() >= this.screenTileX()) {
-			const lastX = this._displayX;
+		};
+		
+		const Game_CharacterBase_moveDiagonally8 = function(direction) {
+			const horz = 1 === direction || 7 === direction ? 4 : 6
+			const vert = direction <= 5 ? 2 : 8;
 			
-			this._displayX = camera.is_bound ?
-				(Math.min(this._displayX + distance, this.width() - this.screenTileX())) :
-				(this._displayX = this._displayX + distance)
-			;
-			this._parallaxX += this._displayX - lastX;
-		}
-	};
-
-	Game_Map.prototype.scrollUp = function(distance) {
-		if (this.isLoopVertical()) {
-			this._displayY += $dataMap.height - distance;
-			this._displayY %= $dataMap.height;
-			if (this._parallaxLoopY) {
-				this._parallaxY -= distance;
+			this.setMovementSuccess(this.canPassDiagonally(this._x, this._y, horz, vert));
+			
+			if (this.isMovementSucceeded()) {
+				this._x = $gameMap.roundXWithDirection(this._x, horz);
+				this._y = $gameMap.roundYWithDirection(this._y, vert);
+				this._realX = $gameMap.xWithDirection(this._x, this.reverseDir(horz));
+				this._realY = $gameMap.yWithDirection(this._y, this.reverseDir(vert));
+				this.increaseSteps();
 			}
-		} else if (this.height() >= this.screenTileY()) {
-			const lastY = this._displayY;
-			this._displayY = camera.is_bound ?
-				(Math.max(this._displayY - distance, 0)) :
-				(this._displayY = this._displayY - distance)
-			;
-			this._parallaxY += this._displayY - lastY;
+			
+			this.setDirection(direction);
+		};
+		
+		const Game_CharacterBase_moveDiagonally4 = function(direction) {
+			Game_CharacterBase.prototype.moveDiagonally.call(this,
+				1 === direction || 7 === direction ? 4 : 6,
+				direction <= 5 ? 2 : 8
+			);
 		}
-	};
-	
-	Game_Player.prototype.center = function(x, y) { // Centers Player when starting on map.
-		return $gameMap.setDisplayPos(this.x - this.centerX() * camera.coefficient, this.y - this.centerY() * camera.coefficient);
-	};
-	
-	Game_Character.prototype.centerX = Game_Player.prototype.centerX;
-	Game_Character.prototype.centerY = Game_Player.prototype.centerY;
-	Game_Character.prototype.center  = Game_Player.prototype.center;
-
-	Game_Player.prototype.updateScroll = camera.update_scroll;
-	
-	if(cmdName.length > 0) {
-		const	Game_Interpreter_pluginCommand =
-				Game_Interpreter.prototype.pluginCommand;
-
-		Game_Interpreter.prototype.pluginCommand = function(command, argv) {
-			if(cmdName === command) {
-				switch(argv[0]) {
-					case 'move': {
-						camera.cmd_move(argv);
-					} break;
-					case 'bind': {
-						camera.is_bound = true;
-					} break;
-					case 'unbind': {
-						camera.is_bound = false;
-					} break;
-					case 'lock': {
-						camera.lock();
-					} break;
-					case 'unlock': {
-						camera.unlock();
-					} break;
-					case 'player': {
-						camera.set_target($gamePlayer);
-					} break;
-//					case 'event': {
-//						camera.cmd_event(argv);
-//					} break;
-					default: {
-						console.warning('Unknown ' + cmdName + ' sub-command' + argv[0] + '.');
-					} break;
+		
+		const Game_CharacterBase_shiftY = function() {
+			return this._customSprite.shiftY;
+		};
+		
+		const Game_CharacterBase_straighten = function() {
+			if ((this.hasWalkAnime() || this.hasStepAnime())) {
+				this._pattern = this._customSprite.idle;
+			}
+			
+			this._animationCount = 0;
+		};
+		
+		const Game_CharacterBase_maxPattern = function() {
+			return (this._customSprite.first+this._customSprite.total);
+		};
+		
+		const Game_CharacterBase_pattern = function() {
+			if("Game_Player" === this.constructor.name) {
+				if(this.isMoving() || 0 !== this.getInputDirection()) {
+					return (this._pattern < this.maxPattern()) && (this._pattern >= this._customSprite.first) ?
+						this._pattern : this._customSprite.first;
+				}
+			} else {
+				if(this.isMoving() || this._moveFrequency >= 5) {
+					return (this._pattern < this.maxPattern()) && (this._pattern >= this._customSprite.first) ?
+						this._pattern : this._customSprite.first;
+				}
+			}
+			
+			return this._customSprite.idle;
+		};
+		
+		const Game_CharacterBase_isOriginalPattern = function() {
+			return this.pattern() === this._customSprite.idle;
+		};
+		
+		const Game_CharacterBase_resetPattern = function() {
+			this.setPattern(this._customSprite.first);
+		};
+		
+		const Game_CharacterBase_animationWait = function() {
+			return this._customSprite.wait(this);
+		};
+		
+		const Sprite_Character_initialize = Sprite_Character.prototype.initialize;
+		
+		Sprite_Character.prototype.initialize = function(character) {
+			Sprite_Character_initialize.call(this, character);
+			
+			const sprite = sprites.find((sprite) =>
+				character._characterName.endsWith(sprite.suffix)
+			);
+			
+			if(sprite) {
+				this.characterBlockX    = Sprite_Character_characterBlockX;
+				this.characterBlockY    = Sprite_Character_characterBlockY;
+				this.characterPatternX  = Sprite_Character_characterPatternX;
+				this.patternWidth       = Sprite_Character_patternWidth;
+				this.patternHeight      = Sprite_Character_patternHeight;
+				
+				character._customSprite = sprite;
+				character.executeMove   = Game_Player_executeMove;
+				
+				if(sprite.eight_way) {
+					character.getInputDirection  = Game_Player_getInputDirection;
+					if(8 === sprite.ycells) {
+						this.characterPatternY   = Sprite_Character_characterPatternY;
+						character.moveDiagonally = Game_CharacterBase_moveDiagonally8;
+					} else {
+						character.moveDiagonally = Game_CharacterBase_moveDiagonally4;
+					}
 				}
 				
-			} else {
-				Game_Interpreter_pluginCommand.call(this, command, argv);
+				character.shiftY            = Game_CharacterBase_shiftY;
+				character.straighten        = Game_CharacterBase_straighten;
+				character.maxPattern        = Game_CharacterBase_maxPattern;
+				character.pattern           = Game_CharacterBase_pattern;
+				character.isOriginalPattern = Game_CharacterBase_isOriginalPattern;
+				character.resetPattern      = Game_CharacterBase_resetPattern;
+				character.animationWait     = Game_CharacterBase_animationWait;
 			}
-		};
+		}
 	}
-	
 })();
