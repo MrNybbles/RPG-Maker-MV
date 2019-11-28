@@ -1,12 +1,12 @@
 /* nyb_SpriteExt.js
- * Version: 20191127d
+ * Version: 20191128a
 */
 /*:
- * @plugindesc Customized Grid-based Sprites.
+ * @plugindesc Sprite Extended Animations.
  * @author MrNybbles
  *
  * @help [Description]
- *  Applies custom Sprite animation based on filename suffix to both
+ *  Applies custom Sprite animation based on filename suffix to
  *  Events and the Player.
  *
  * _______RpgMV_CPACK *
@@ -136,6 +136,7 @@
  * @desc     Returns the delay used before cycling to the next frame.
  * Default:  ((ch) => (9 - ch.realMoveSpeed()) * 3)
  * @default  ((ch) => (9 - ch.realMoveSpeed()) * 3)
+
 */
 'use strict';
 
@@ -175,7 +176,10 @@
 			if (this._isBigCharacter) {
 				return 0;
 			} else {
-				return this._character.characterIndex() % this._character._customSprite.ycells * this._character._customSprite.total;
+				return (this._character.characterIndex() %
+					this._character._customSprite.ycells *
+					this._character._customSprite.total
+				);
 			}
 		};
 
@@ -183,7 +187,9 @@
 			if (this._isBigCharacter) {
 				return 0;
 			} else {
-				return ((this._character.characterIndex() / this._character._customSprite.ycells)<<0) * 4;
+				return ((this._character.characterIndex() /
+					this._character._customSprite.ycells)<<2
+				);
 			}
 		};
 
@@ -210,9 +216,13 @@
 			if (this._tileId > 0) {
 				return $gameMap.tileWidth();
 			} else if (this._isBigCharacter) {
-				return (this.bitmap.width / this._character._customSprite.xcells);
+				return (this.bitmap.width /
+					this._character._customSprite.xcells
+				);
 			} else {
-				return (this.bitmap.width / this._character._customSprite.xcells * 0.25);
+				return (this.bitmap.width /
+					this._character._customSprite.xcells * 0.25
+				);
 			}
 		};
 
@@ -220,9 +230,13 @@
 			if (this._tileId > 0) {
 				return $gameMap.tileHeight();
 			} else if (this._isBigCharacter) {
-				return (this.bitmap.height / this._character._customSprite.ycells);
+				return (this.bitmap.height /
+					this._character._customSprite.ycells
+				);
 			} else {
-				return (this.bitmap.height / this._character._customSprite.ycells * 0.5);
+				return (this.bitmap.height /
+					this._character._customSprite.ycells * 0.5
+				);
 			}
 		};
 		
@@ -280,14 +294,18 @@
 		
 		const Game_CharacterBase_pattern = function() {
 			if("Game_Player" === this.constructor.name) {
-				if(this.isMoving() || 0 !== this.getInputDirection()) {
-					return (this._pattern < this.maxPattern()) && (this._pattern >= this._customSprite.first) ?
-						this._pattern : this._customSprite.first;
+				if((this.isMoving() && this.hasWalkAnime()) || 0 !== this.getInputDirection()) {
+					return ((this._pattern < this.maxPattern()) &&
+						(this._pattern >= this._customSprite.first) ?
+						this._pattern : this._customSprite.first
+					);
 				}
 			} else {
-				if(this.isMoving() || this._moveFrequency >= 5) {
-					return (this._pattern < this.maxPattern()) && (this._pattern >= this._customSprite.first) ?
-						this._pattern : this._customSprite.first;
+				if((this.isMoving() && this.hasWalkAnime()) || this._moveFrequency >= 5) {
+					return ((this._pattern < this.maxPattern()) &&
+						(this._pattern >= this._customSprite.first) ?
+						this._pattern : this._customSprite.first
+					);
 				}
 			}
 			
@@ -299,7 +317,7 @@
 		};
 		
 		const Game_CharacterBase_resetPattern = function() {
-			this.setPattern(this._customSprite.first);
+			this.setPattern(this._customSprite.idle);
 		};
 		
 		const Game_CharacterBase_animationWait = function() {
