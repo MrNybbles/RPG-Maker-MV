@@ -1,5 +1,5 @@
 /* nyb_Camera.js
- * Version: 20191124a
+ * Version: 20191127b
 */
 /*:
  * @plugindesc Camera Controls
@@ -302,13 +302,20 @@
 				camera.next_scene_update = null;
 			}
 		},
+		center_scaled_x:function(coefficient) {
+			return = ((Graphics.width * camera.coefficient - Graphics.width * coefficient)/$gameMap.tileWidth())>>1;
+		},
+		center_scaled_y:function(coefficient) {
+			return ((Graphics.height * camera.coefficient - Graphics.height * coefficient)/$gameMap.tileHeight())>>1;
+		},
 		do_move:function(x, y, scale, duration) {
-			if(null === this.next_scene_update && !isNaN(x) && !isNaN(y) && !isNaN(scale) && !isNaN(duration) && duration > 0) {
+			if(null === this.next_scene_update && !isNaN(x) && !isNaN(y) && !isNaN(scale) && !isNaN(duration) && --duration > 0) {
+				const coefficient = 1.0/scale;
 				this.ttl = duration;
 				this.tx  = x;
-				this.dx  = (x)  / duration;
+				this.dx  = (x + this.center_scaled_x(coefficient)) / duration;
 				this.ty  = y;
-				this.dy  = (y)  / duration;
+				this.dy  = (y + this.center_scaled_y(coefficient)) / duration;
 				this.tz  = scale;
 				this.dz  = (this.scale - scale) / duration;
 				this.next_scene_update = SceneManager._scene.updateChildren;
