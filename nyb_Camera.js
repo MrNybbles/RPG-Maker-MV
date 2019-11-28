@@ -1,5 +1,5 @@
 /* nyb_Camera.js
- * Version: 20191127b
+ * Version: 20191127c
 */
 /*:
  * @plugindesc Camera Controls
@@ -303,7 +303,7 @@
 			}
 		},
 		center_scaled_x:function(coefficient) {
-			return = ((Graphics.width * camera.coefficient - Graphics.width * coefficient)/$gameMap.tileWidth())>>1;
+			return ((Graphics.width * camera.coefficient - Graphics.width * coefficient)/$gameMap.tileWidth())>>1;
 		},
 		center_scaled_y:function(coefficient) {
 			return ((Graphics.height * camera.coefficient - Graphics.height * coefficient)/$gameMap.tileHeight())>>1;
